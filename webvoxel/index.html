@@ -14,8 +14,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/OBJExporter.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/STLExporter.js"></script>
+    <!-- GLTFExporter is required for valid GLB exports that 3D Viewers can read -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+    <!-- STLExporter for 3D printing and standard model formats -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/STLExporter.js"></script>
 
     <style>
         body { margin: 0; overflow: hidden; background-color: #0f172a; }
@@ -84,43 +86,54 @@
     <!-- Main Workspace -->
     <main class="flex-1 relative flex flex-col min-h-[60vh] md:h-screen">
         <!-- Top Action Bar -->
-        <header class="absolute top-0 left-0 right-0 h-16 bg-slate-800/80 backdrop-blur-md border-b border-slate-700 flex items-center justify-between px-4 z-10 shadow-sm pointer-events-none">
-            <div class="hidden md:flex text-xs text-slate-400 items-center gap-4 bg-slate-900/50 px-3 py-1.5 rounded-full pointer-events-auto">
+        <header class="absolute top-0 left-0 right-0 h-auto md:h-16 bg-slate-800/90 backdrop-blur-md border-b border-slate-700 flex flex-wrap items-center justify-between p-2 md:px-4 z-10 shadow-sm pointer-events-none">
+            <div class="hidden lg:flex text-xs text-slate-400 items-center gap-4 bg-slate-900/50 px-3 py-1.5 rounded-full pointer-events-auto">
                 <span class="flex items-center gap-1"><i class="ph-fill ph-mouse-left"></i> Action</span>
                 <span class="flex items-center gap-1"><i class="ph-fill ph-mouse-right"></i> Orbit</span>
                 <span class="flex items-center gap-1">Shift + <i class="ph-fill ph-mouse-right"></i> Pan</span>
                 <span class="flex items-center gap-1">Scroll: Zoom</span>
             </div>
             
-            <div class="flex items-center gap-2 pointer-events-auto ml-auto">
-                <button id="btn-undo" class="p-2.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title="Undo (Ctrl+Z)">
+            <div class="flex items-center gap-1.5 md:gap-2 pointer-events-auto w-full lg:w-auto justify-end flex-wrap">
+                <!-- Undo/Redo/Clear -->
+                <button id="btn-undo" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title="Undo (Ctrl+Z)">
                     <i class="ph ph-arrow-u-up-left text-xl"></i>
                 </button>
-                <button id="btn-redo" class="p-2.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title="Redo (Ctrl+Y)">
+                <button id="btn-redo" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title="Redo (Ctrl+Y)">
                     <i class="ph ph-arrow-u-up-right text-xl"></i>
                 </button>
-                <div class="w-px h-6 bg-slate-600 mx-2"></div>
-                <button id="btn-clear" class="px-4 py-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg text-slate-300 transition-colors text-sm font-medium flex items-center gap-2">
-                    <i class="ph ph-trash text-lg"></i> <span class="hidden sm:inline">Clear</span>
+                <div class="w-px h-6 bg-slate-600 mx-1"></div>
+                
+                <button id="btn-clear" class="p-2 md:px-4 md:py-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg text-slate-300 transition-colors text-sm font-medium flex items-center gap-2" title="Clear Canvas">
+                    <i class="ph ph-trash text-lg"></i> <span class="hidden xl:inline">Clear</span>
+                </button>
+                <div class="w-px h-6 bg-slate-600 mx-1"></div>
+
+                <!-- Hidden Input for Loading JSON -->
+                <input type="file" id="file-import-json" accept=".json" class="hidden">
+                
+                <!-- JSON Save/Load -->
+                <button id="btn-import-json" class="p-2 md:px-4 md:py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-200 transition-colors text-sm font-medium flex items-center gap-2" title="Open Project (JSON)">
+                    <i class="ph ph-folder-open text-lg"></i> <span class="hidden sm:inline">Open</span>
+                </button>
+                <button id="btn-export-json" class="p-2 md:px-4 md:py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-200 transition-colors text-sm font-medium flex items-center gap-2" title="Save Project (JSON)">
+                    <i class="ph ph-floppy-disk text-lg"></i> <span class="hidden sm:inline">Save</span>
                 </button>
                 
-                <!-- Export Dropdown -->
-                <div class="relative group ml-1">
-                    <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-all shadow-lg shadow-indigo-500/20 text-sm font-medium flex items-center gap-2">
-                        <i class="ph ph-download-simple text-lg"></i> <span class="hidden sm:inline">Export</span> <i class="ph ph-caret-down"></i>
-                    </button>
-                    <!-- Dropdown Menu -->
-                    <div class="absolute right-0 mt-2 w-36 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col overflow-hidden z-50 transform origin-top-right group-hover:scale-100 scale-95 duration-150">
-                        <button id="btn-export-obj" class="px-4 py-3 text-left hover:bg-slate-700 text-sm text-slate-200 flex items-center gap-3 font-medium border-b border-slate-700/50"><i class="ph ph-file-text text-lg text-slate-400"></i> .OBJ</button>
-                        <button id="btn-export-stl" class="px-4 py-3 text-left hover:bg-slate-700 text-sm text-slate-200 flex items-center gap-3 font-medium border-b border-slate-700/50"><i class="ph ph-cube text-lg text-slate-400"></i> .STL</button>
-                        <button id="btn-export-glb" class="px-4 py-3 text-left hover:bg-slate-700 text-sm text-slate-200 flex items-center gap-3 font-medium"><i class="ph ph-package text-lg text-slate-400"></i> .GLB</button>
-                    </div>
+                <div class="w-px h-6 bg-slate-600 mx-1 hidden md:block"></div>
+
+                <!-- Export Group -->
+                <div class="flex items-center gap-1 bg-slate-900/50 p-1 rounded-lg pointer-events-auto">
+                    <span class="text-xs text-slate-400 px-2 hidden lg:inline">Export:</span>
+                    <button id="btn-export-glb" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded text-white text-xs font-medium transition-colors" title="Export to GLB">GLB</button>
+                    <button id="btn-export-obj" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-200 text-xs font-medium transition-colors" title="Export to OBJ">OBJ</button>
+                    <button id="btn-export-stl" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-slate-200 text-xs font-medium transition-colors" title="Export to STL">STL</button>
                 </div>
             </div>
         </header>
 
         <!-- 3D Canvas -->
-        <div id="canvas-container" class="w-full h-full"></div>
+        <div id="canvas-container" class="w-full h-full pt-16"></div>
 
         <!-- Toast Notification Container -->
         <div id="toast-container" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none"></div>
@@ -238,10 +251,13 @@
         }
 
         function getIntersects( event, container ) {
-            const rect = container.getBoundingClientRect();
+            // Memperbaiki akurasi pointer dengan menggunakan posisi absolut domElement (canvas)
+            const canvas = renderer.domElement;
+            const rect = canvas.getBoundingClientRect();
+            
             // Calculate mouse position in normalized device coordinates (-1 to +1)
-            pointer.x = ( ( event.clientX - rect.left ) / container.clientWidth ) * 2 - 1;
-            pointer.y = - ( ( event.clientY - rect.top ) / container.clientHeight ) * 2 + 1;
+            pointer.x = ( ( event.clientX - rect.left ) / rect.width ) * 2 - 1;
+            pointer.y = - ( ( event.clientY - rect.top ) / rect.height ) * 2 + 1;
 
             raycaster.setFromCamera( pointer, camera );
             return raycaster.intersectObjects( intersectObjects, false );
@@ -378,7 +394,7 @@
             }
         }
 
-        function clearAll() {
+        function clearAll(record = true, showNotification = true) {
             if(voxels.length === 0) return;
             
             const removedMeshes = [...voxels];
@@ -392,8 +408,12 @@
             voxels = [];
             intersectObjects = [plane]; // Keep plane
             
-            recordHistory({ type: 'clear', meshes: removedMeshes });
-            showToast("Workspace cleared", "info");
+            if (record) {
+                recordHistory({ type: 'clear', meshes: removedMeshes });
+            }
+            if (showNotification) {
+                showToast("Workspace cleared", "info");
+            }
         }
 
         function recordHistory(action) {
@@ -527,18 +547,27 @@
 
             // Action Buttons
             document.getElementById('btn-clear').addEventListener('click', () => {
-                if(confirm("Are you sure you want to clear the entire workspace?")) {
-                    clearAll();
+                // Ensure a custom confirm is utilized using prompt/confirm for simplicity 
+                // Alternatively a custom modal but standard confirm suffices.
+                if(window.confirm("Are you sure you want to clear the entire workspace?")) {
+                    clearAll(true, true);
                 }
             });
 
             document.getElementById('btn-undo').addEventListener('click', undo);
             document.getElementById('btn-redo').addEventListener('click', redo);
             
-            // Export Buttons
+            // Import / Export Buttons
+            document.getElementById('btn-export-json').addEventListener('click', exportToJSON);
+            
+            document.getElementById('btn-import-json').addEventListener('click', () => {
+                document.getElementById('file-import-json').click();
+            });
+            document.getElementById('file-import-json').addEventListener('change', importFromJSON);
+
+            document.getElementById('btn-export-glb').addEventListener('click', exportToGLB);
             document.getElementById('btn-export-obj').addEventListener('click', exportToOBJ);
             document.getElementById('btn-export-stl').addEventListener('click', exportToSTL);
-            document.getElementById('btn-export-glb').addEventListener('click', exportToGLB);
 
             updateUndoRedoUI();
         }
@@ -553,7 +582,6 @@
 
         // Keyboard shortcuts mapping
         function onDocumentKeyDown( event ) {
-            // Ignore if typing in an input (though we don't have any text inputs right now)
             if ( event.target.tagName.toLowerCase() === 'input' ) return;
 
             switch ( event.key.toLowerCase() ) {
@@ -572,59 +600,75 @@
             }
         }
 
-        // --- Helper for Downloading Files ---
-        function downloadFile(data, filename, mimeType, isArrayBuffer = false) {
-            const blob = new Blob( [ data ], { type: mimeType } );
-            const link = document.createElement( 'a' );
+        // --- JSON SAVE AND LOAD ---
+        function exportToJSON() {
+            if (voxels.length === 0) {
+                showToast("Workspace is empty. Nothing to save.", "error");
+                return;
+            }
+
+            // Extract position and color data from meshes
+            const voxelData = voxels.map(v => {
+                return {
+                    p: { x: v.position.x, y: v.position.y, z: v.position.z },
+                    c: '#' + v.material.color.getHexString()
+                };
+            });
+
+            const jsonString = JSON.stringify(voxelData);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const link = document.createElement('a');
             link.style.display = 'none';
-            link.href = URL.createObjectURL( blob );
-            link.download = filename;
-            document.body.appendChild( link );
+            link.href = URL.createObjectURL(blob);
+            link.download = 'webvoxel_project.json';
+            
+            document.body.appendChild(link);
             link.click();
-            document.body.removeChild( link );
-            URL.revokeObjectURL(link.href);
+            document.body.removeChild(link);
+            
+            showToast("Project saved successfully!", "success");
         }
 
-        function exportToOBJ() {
-            if (voxels.length === 0) {
-                showToast("Workspace is empty. Nothing to export.", "error");
-                return;
-            }
+        function importFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-            try {
-                const exporter = new THREE.OBJExporter();
-                const exportGroup = new THREE.Group();
-                voxels.forEach(voxel => exportGroup.add(voxel.clone()));
-                
-                const result = exporter.parse( exportGroup );
-                downloadFile(result, 'webvoxel_model.obj', 'text/plain');
-                showToast("Model exported as OBJ successfully!", "success");
-            } catch (error) {
-                console.error("Export failed:", error);
-                showToast("Failed to export OBJ model.", "error");
-            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!Array.isArray(data)) throw new Error("Invalid format");
+
+                    // Clear canvas without recording history and without toast
+                    clearAll(false, false);
+                    
+                    // Reconstruct Voxels
+                    data.forEach(item => {
+                        if (item.p && item.c) {
+                            const pos = new THREE.Vector3(item.p.x, item.p.y, item.p.z);
+                            addVoxel(pos, item.c, false); // false = don't record to history during load
+                        }
+                    });
+
+                    // Reset undo/redo history for new project
+                    history = [];
+                    historyIndex = -1;
+                    updateUndoRedoUI();
+
+                    showToast("Project loaded successfully!", "success");
+                } catch (error) {
+                    console.error(error);
+                    showToast("Failed to load project file.", "error");
+                }
+            };
+            
+            reader.readAsText(file);
+            // Reset input value so same file can be chosen again
+            event.target.value = '';
         }
 
-        function exportToSTL() {
-            if (voxels.length === 0) {
-                showToast("Workspace is empty. Nothing to export.", "error");
-                return;
-            }
-
-            try {
-                const exporter = new THREE.STLExporter();
-                const exportGroup = new THREE.Group();
-                voxels.forEach(voxel => exportGroup.add(voxel.clone()));
-                
-                const result = exporter.parse( exportGroup );
-                downloadFile(result, 'webvoxel_model.stl', 'text/plain');
-                showToast("Model exported as STL successfully!", "success");
-            } catch (error) {
-                console.error("Export failed:", error);
-                showToast("Failed to export STL model.", "error");
-            }
-        }
-
+        // --- GLB EXPORT (BINARISED GLTF) ---
         function exportToGLB() {
             if (voxels.length === 0) {
                 showToast("Workspace is empty. Nothing to export.", "error");
@@ -632,27 +676,106 @@
             }
 
             try {
+                // Ensure GLTFExporter is loaded
+                if (typeof THREE.GLTFExporter === 'undefined') {
+                    throw new Error("GLTFExporter library is missing.");
+                }
+
                 const exporter = new THREE.GLTFExporter();
+                
+                // Group the voxels to export them as a single scene object
                 const exportGroup = new THREE.Group();
                 voxels.forEach(voxel => exportGroup.add(voxel.clone()));
+
+                // We request binary: true to export directly as a .glb file
+                exporter.parse( exportGroup, function ( glb ) {
+                    const blob = new Blob( [ glb ], { type: 'application/octet-stream' } );
+                    const link = document.createElement( 'a' );
+                    link.style.display = 'none';
+                    link.href = URL.createObjectURL( blob );
+                    link.download = 'webvoxel_model.glb';
+                    
+                    document.body.appendChild( link );
+                    link.click();
+                    document.body.removeChild( link );
+                    
+                    showToast("Model exported to .GLB successfully!", "success");
+                }, { binary: true } );
                 
-                // GLB ekspor membutuhkan callback asinkron
-                exporter.parse(
-                    exportGroup,
-                    function ( gltf ) {
-                        // Hasilnya adalah ArrayBuffer karena opsi binary: true
-                        downloadFile(gltf, 'webvoxel_model.glb', 'application/octet-stream', true);
-                        showToast("Model exported as GLB successfully!", "success");
-                    },
-                    function ( error ) {
-                        console.error("Export failed:", error);
-                        showToast("Failed to export GLB model.", "error");
-                    },
-                    { binary: true } // Parameter ini memastikan format yang keluar adalah .GLB (Binary), bukan .GLTF
-                );
             } catch (error) {
                 console.error("Export failed:", error);
                 showToast("Failed to export GLB model.", "error");
+            }
+        }
+
+        // --- OBJ EXPORT ---
+        function exportToOBJ() {
+            if (voxels.length === 0) {
+                showToast("Workspace is empty. Nothing to export.", "error");
+                return;
+            }
+
+            try {
+                if (typeof THREE.OBJExporter === 'undefined') {
+                    throw new Error("OBJExporter library is missing.");
+                }
+
+                const exporter = new THREE.OBJExporter();
+                const exportGroup = new THREE.Group();
+                voxels.forEach(voxel => exportGroup.add(voxel.clone()));
+                
+                const result = exporter.parse( exportGroup );
+                
+                const blob = new Blob( [ result ], { type: 'text/plain' } );
+                const link = document.createElement( 'a' );
+                link.style.display = 'none';
+                link.href = URL.createObjectURL( blob );
+                link.download = 'webvoxel_model.obj';
+                
+                document.body.appendChild( link );
+                link.click();
+                document.body.removeChild( link );
+                
+                showToast("Model exported to .OBJ successfully!", "success");
+            } catch (error) {
+                console.error("Export failed:", error);
+                showToast("Failed to export OBJ model.", "error");
+            }
+        }
+
+        // --- STL EXPORT ---
+        function exportToSTL() {
+            if (voxels.length === 0) {
+                showToast("Workspace is empty. Nothing to export.", "error");
+                return;
+            }
+
+            try {
+                if (typeof THREE.STLExporter === 'undefined') {
+                    throw new Error("STLExporter library is missing.");
+                }
+
+                const exporter = new THREE.STLExporter();
+                const exportGroup = new THREE.Group();
+                voxels.forEach(voxel => exportGroup.add(voxel.clone()));
+                
+                // Export as binary STL
+                const result = exporter.parse( exportGroup, { binary: true } );
+                
+                const blob = new Blob( [ result ], { type: 'application/octet-stream' } );
+                const link = document.createElement( 'a' );
+                link.style.display = 'none';
+                link.href = URL.createObjectURL( blob );
+                link.download = 'webvoxel_model.stl';
+                
+                document.body.appendChild( link );
+                link.click();
+                document.body.removeChild( link );
+                
+                showToast("Model exported to .STL successfully!", "success");
+            } catch (error) {
+                console.error("Export failed:", error);
+                showToast("Failed to export STL model.", "error");
             }
         }
 
