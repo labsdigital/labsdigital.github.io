@@ -14,6 +14,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/OBJExporter.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/STLExporter.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
 
     <style>
         body { margin: 0; overflow: hidden; background-color: #0f172a; }
@@ -101,9 +103,19 @@
                 <button id="btn-clear" class="px-4 py-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg text-slate-300 transition-colors text-sm font-medium flex items-center gap-2">
                     <i class="ph ph-trash text-lg"></i> <span class="hidden sm:inline">Clear</span>
                 </button>
-                <button id="btn-export" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-all shadow-lg shadow-indigo-500/20 text-sm font-medium flex items-center gap-2 ml-1">
-                    <i class="ph ph-download-simple text-lg"></i> <span class="hidden sm:inline">Export .OBJ</span>
-                </button>
+                
+                <!-- Export Dropdown -->
+                <div class="relative group ml-1">
+                    <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-all shadow-lg shadow-indigo-500/20 text-sm font-medium flex items-center gap-2">
+                        <i class="ph ph-download-simple text-lg"></i> <span class="hidden sm:inline">Export</span> <i class="ph ph-caret-down"></i>
+                    </button>
+                    <!-- Dropdown Menu -->
+                    <div class="absolute right-0 mt-2 w-36 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all flex flex-col overflow-hidden z-50 transform origin-top-right group-hover:scale-100 scale-95 duration-150">
+                        <button id="btn-export-obj" class="px-4 py-3 text-left hover:bg-slate-700 text-sm text-slate-200 flex items-center gap-3 font-medium border-b border-slate-700/50"><i class="ph ph-file-text text-lg text-slate-400"></i> .OBJ</button>
+                        <button id="btn-export-stl" class="px-4 py-3 text-left hover:bg-slate-700 text-sm text-slate-200 flex items-center gap-3 font-medium border-b border-slate-700/50"><i class="ph ph-cube text-lg text-slate-400"></i> .STL</button>
+                        <button id="btn-export-glb" class="px-4 py-3 text-left hover:bg-slate-700 text-sm text-slate-200 flex items-center gap-3 font-medium"><i class="ph ph-package text-lg text-slate-400"></i> .GLB</button>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -523,8 +535,10 @@
             document.getElementById('btn-undo').addEventListener('click', undo);
             document.getElementById('btn-redo').addEventListener('click', redo);
             
-            // Export
-            document.getElementById('btn-export').addEventListener('click', exportToOBJ);
+            // Export Buttons
+            document.getElementById('btn-export-obj').addEventListener('click', exportToOBJ);
+            document.getElementById('btn-export-stl').addEventListener('click', exportToSTL);
+            document.getElementById('btn-export-glb').addEventListener('click', exportToGLB);
 
             updateUndoRedoUI();
         }
@@ -558,6 +572,19 @@
             }
         }
 
+        // --- Helper for Downloading Files ---
+        function downloadFile(data, filename, mimeType, isArrayBuffer = false) {
+            const blob = new Blob( [ data ], { type: mimeType } );
+            const link = document.createElement( 'a' );
+            link.style.display = 'none';
+            link.href = URL.createObjectURL( blob );
+            link.download = filename;
+            document.body.appendChild( link );
+            link.click();
+            document.body.removeChild( link );
+            URL.revokeObjectURL(link.href);
+        }
+
         function exportToOBJ() {
             if (voxels.length === 0) {
                 showToast("Workspace is empty. Nothing to export.", "error");
@@ -566,27 +593,66 @@
 
             try {
                 const exporter = new THREE.OBJExporter();
-                
-                // Create a temporary group to hold only the voxels
                 const exportGroup = new THREE.Group();
                 voxels.forEach(voxel => exportGroup.add(voxel.clone()));
                 
                 const result = exporter.parse( exportGroup );
-                
-                // Trigger download
-                const blob = new Blob( [ result ], { type: 'text/plain' } );
-                const link = document.createElement( 'a' );
-                link.style.display = 'none';
-                link.href = URL.createObjectURL( blob );
-                link.download = 'webvoxel_model.obj';
-                document.body.appendChild( link );
-                link.click();
-                document.body.removeChild( link );
-                
-                showToast("Model exported successfully!", "success");
+                downloadFile(result, 'webvoxel_model.obj', 'text/plain');
+                showToast("Model exported as OBJ successfully!", "success");
             } catch (error) {
                 console.error("Export failed:", error);
-                showToast("Failed to export model.", "error");
+                showToast("Failed to export OBJ model.", "error");
+            }
+        }
+
+        function exportToSTL() {
+            if (voxels.length === 0) {
+                showToast("Workspace is empty. Nothing to export.", "error");
+                return;
+            }
+
+            try {
+                const exporter = new THREE.STLExporter();
+                const exportGroup = new THREE.Group();
+                voxels.forEach(voxel => exportGroup.add(voxel.clone()));
+                
+                const result = exporter.parse( exportGroup );
+                downloadFile(result, 'webvoxel_model.stl', 'text/plain');
+                showToast("Model exported as STL successfully!", "success");
+            } catch (error) {
+                console.error("Export failed:", error);
+                showToast("Failed to export STL model.", "error");
+            }
+        }
+
+        function exportToGLB() {
+            if (voxels.length === 0) {
+                showToast("Workspace is empty. Nothing to export.", "error");
+                return;
+            }
+
+            try {
+                const exporter = new THREE.GLTFExporter();
+                const exportGroup = new THREE.Group();
+                voxels.forEach(voxel => exportGroup.add(voxel.clone()));
+                
+                // GLB ekspor membutuhkan callback asinkron
+                exporter.parse(
+                    exportGroup,
+                    function ( gltf ) {
+                        // Hasilnya adalah ArrayBuffer karena opsi binary: true
+                        downloadFile(gltf, 'webvoxel_model.glb', 'application/octet-stream', true);
+                        showToast("Model exported as GLB successfully!", "success");
+                    },
+                    function ( error ) {
+                        console.error("Export failed:", error);
+                        showToast("Failed to export GLB model.", "error");
+                    },
+                    { binary: true } // Parameter ini memastikan format yang keluar adalah .GLB (Binary), bukan .GLTF
+                );
+            } catch (error) {
+                console.error("Export failed:", error);
+                showToast("Failed to export GLB model.", "error");
             }
         }
 
