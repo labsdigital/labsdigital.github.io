@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Peradaban Mesir Kuno — Jelajah 3D</title>
+<style>
+:root{--card:#FFFFFFEE;--text:#1F2937;--gold:#D4AF37;--muted:#6B7280;--hover:#FFF7E0;--shadow:0 8px 24px rgba(120,90,20,.18)}
+body.dark{--card:#1B2440EE;--text:#E5E7EB;--muted:#9CA3AF;--hover:#2A3560;--shadow:0 8px 24px rgba(0,0,0,.45)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);background:#FCEFD2}
+body.dark{background:#0B1530}
+#wrap{position:fixed;inset:0}
+#wrap canvas{display:block;width:100%;height:100%}
+.panel{background:var(--card);border:1px solid var(--gold);border-radius:14px;box-shadow:var(--shadow);backdrop-filter:blur(6px)}
+header{position:fixed;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;z-index:5;pointer-events:none}
+header .panel{padding:10px 16px;pointer-events:auto}
+h1{font-size:18px;margin:0;font-weight:700}
+.sub{font-size:12px;color:var(--muted);margin-top:2px}
+.tools{display:flex;gap:8px;pointer-events:auto}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--card);color:var(--text);border:1px solid var(--gold);border-radius:10px;padding:8px 12px;font-size:13px;box-shadow:var(--shadow)}
+.btn:hover{background:var(--hover)}
+#sidebar{position:fixed;left:12px;top:110px;bottom:12px;width:250px;padding:12px;z-index:4;display:flex;flex-direction:column}
+#sidebar h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:4px 4px 8px}
+#list{overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px}
+.item{display:flex;gap:10px;align-items:center;text-align:left;background:transparent;color:var(--text);border:1px solid transparent;border-radius:10px;padding:8px 10px;font-size:13px}
+.item:hover{background:var(--hover);border-color:var(--gold)}
+.item.active{background:var(--hover);border-color:var(--gold);font-weight:600}
+.no{min-width:26px;height:26px;border-radius:50%;background:var(--gold);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+#card{position:fixed;right:12px;top:110px;width:340px;max-height:calc(100vh - 130px);overflow-y:auto;padding:18px 18px 16px;z-index:4;transition:opacity .3s,transform .3s}
+#card.hidden{opacity:0;transform:translateX(20px);pointer-events:none}
+#card h2{font-size:20px;margin:8px 0 10px;line-height:1.25;padding-right:24px}
+#card h3{font-size:12px;margin:14px 0 4px;color:#8A6D12;text-transform:uppercase;letter-spacing:.05em}
+body.dark #card h3{color:var(--gold)}
+#card p{font-size:14px;line-height:1.6;margin:0}
+.grp{display:inline-block;font-size:11px;background:var(--hover);border:1px solid var(--gold);border-radius:999px;padding:2px 10px;color:var(--muted)}
+dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:6px 10px;font-size:13px}
+dt{color:var(--muted);font-weight:600}
+dd{margin:0}
+#close{position:absolute;top:10px;right:10px;border:none;background:transparent;font-size:20px;color:var(--muted);width:30px;height:30px;border-radius:8px}
+#close:hover{background:var(--hover)}
+#tip{position:fixed;pointer-events:none;background:var(--card);border:1px solid var(--gold);padding:4px 10px;border-radius:8px;font-size:12px;opacity:0;transition:opacity .15s;z-index:6;white-space:nowrap;box-shadow:var(--shadow)}
+#hint{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:12px;background:var(--card);padding:6px 12px;border-radius:999px;border:1px solid var(--gold);z-index:3;pointer-events:none;white-space:nowrap}
+@media (max-width:800px){
+  #sidebar{left:0;right:0;top:auto;bottom:0;width:auto;height:auto;border-radius:14px 14px 0 0;padding:8px 10px 10px}
+  #sidebar h2{display:none}
+  #list{flex-direction:row;overflow-x:auto;overflow-y:hidden;padding-bottom:4px}
+  .item{flex:none;white-space:nowrap}
+  #card{left:10px;right:10px;width:auto;top:auto;bottom:150px;max-height:40vh}
+  #hint{display:none}
+  header{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div id="wrap"></div>
+
+<header>
+  <div class="panel"><h1>Peradaban Mesir Kuno</h1><div class="sub">Jelajah 3D · Lembah Sungai Nil</div></div>
+  <div class="tools">
+    <button class="btn" id="btnTheme">🌙 Malam</button>
+    <button class="btn" id="btnReset">⟲ Pandangan Awal</button>
+  </div>
+</header>
+
+<aside id="sidebar" class="panel">
+  <h2>Indeks Artefak</h2>
+  <div id="list"></div>
+</aside>
+
+<section id="card" class="panel hidden">
+  <button id="close" aria-label="Tutup">×</button>
+  <span class="grp" id="cGrp"></span>
+  <h2 id="cName"></h2>
+  <dl>
+    <dt>Lokasi</dt><dd id="cLoc"></dd>
+    <dt>Penanggalan</dt><dd id="cDate"></dd>
+  </dl>
+  <h3>Deskripsi Sejarah</h3>
+  <p id="cDesc"></p>
+  <h3>Fungsi Budaya</h3>
+  <p id="cFungsi"></p>
+</section>
+
+<div id="tip"></div>
+<div id="hint">Seret untuk memutar · Scroll untuk zoom · Klik artefak untuk detail</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ================= TEMA ================= */
+const THEMES = {
+  light:{ top:0xE0F2FE, bottom:0xFCEFD2, sand:0xEED9A4, water:0x4FA4C8, bank:0xE2BE7A,
+          sun:0xFFF1D0, sunI:2.3, amb:0xFFF3DC, ambI:0.9, hemiSky:0xE0F2FE, hemiGround:0xEED9A4, hemiI:0.5, fog:0xFCEFD2 },
+  dark: { top:0x0B1530, bottom:0x2B2440, sand:0x7A6A4A, water:0x1F5A7A, bank:0x5C4B30,
+          sun:0xA9BFFF, sunI:0.9, amb:0x4A5A80, ambI:0.6, hemiSky:0x1B2A4A, hemiGround:0x3A2F20, hemiI:0.35, fog:0x1E1E38 }
+};
+
+/* ================= DATA ARTEFAK ================= */
+const ARTS = [
+  { name:'Piramida Agung Giza (Khufu)', grp:'Giza', x:-60, z:-50, build:buildKhufu,
+    loc:'Giza, tepi barat Sungai Nil, dekat Kairo',
+    date:'±2560 SM · Dinasti IV (Kerajaan Lama)',
+    desc:'Piramida terbesar dari tiga piramida utama Giza. Dibangun dari sekitar 2,3 juta blok batu kapur dan granit, dengan tinggi awal sekitar 146 meter.',
+    fungsi:'Makam Firaun Khufu; simbol keabadian dan legitimasi kekuasaan ilahi raja.' },
+  { name:'Piramida Khafre', grp:'Giza', x:-100, z:-50, build:buildKhafre,
+    loc:'Giza, di sebelah barat daya Piramida Khufu',
+    date:'±2570 SM · Dinasti IV',
+    desc:'Piramida kedua di Giza yang tampak sedikit lebih tinggi karena berdiri di atas dataran yang lebih tinggi. Sisa selubung batu kapur halus masih terlihat di bagian puncaknya.',
+    fungsi:'Makam Firaun Khafre; bagian dari kompleks pemujaan bersama Sphinx.' },
+  { name:'Piramida Menkaure', grp:'Giza', x:-132, z:-50, build:buildMenkaure,
+    loc:'Giza, paling selatan dari tiga piramida utama',
+    date:'±2510 SM · Dinasti IV',
+    desc:'Piramida terkecil dari tiga piramida utama Giza. Dilengkapi kuil pemujaan di sisi timurnya.',
+    fungsi:'Makam Firaun Menkaure; menunjukkan perubahan ukuran makam raja pada akhir Kerajaan Lama.' },
+  { name:'Great Sphinx (Sphinx Agung)', grp:'Giza', x:-60, z:-18, build:buildSphinx,
+    loc:'Giza, di depan kompleks piramida Khafre',
+    date:'±2500 SM · Dinasti IV (umumnya dikaitkan dengan Khafre)',
+    desc:'Patung singa berkepala manusia yang dipahat langsung dari batu kapur alami di dataran Giza. Wajahnya diperkirakan merupakan potret raja.',
+    fungsi:'Penjaga kompleks makam dan simbol kekuatan raja yang memadukan kecerdasan manusia dan kekuatan singa.' },
+  { name:'Kuil Karnak (Aula Hypostyle)', grp:'Thebes & Nubia', x:70, z:40, build:buildKarnak,
+    loc:'Luxor (Thebes), tepi timur Sungai Nil',
+    date:'±2000 SM hingga era Ptolemaik · Kerajaan Tengah–Kerajaan Baru',
+    desc:'Kompleks kuil terbesar di Mesir. Aula Hypostyle dikelilingi deretan pilar raksasa yang berhiaskan relief, dibangun bertahap selama berabad-abad.',
+    fungsi:'Kuil utama pemujaan Amun-Ra, dewa tertinggi pada masa Kerajaan Baru.' },
+  { name:'Kuil Abu Simbel (Ramses II)', grp:'Thebes & Nubia', x:170, z:60, build:buildAbu,
+    loc:'Nubia, dekat Aswan (Mesir Selatan)',
+    date:'±1264 SM · Dinasti XIX (era Ramses II)',
+    desc:'Kuil yang dipahat langsung di tebing batu pasir. Empat patung raksasa Ramses II setinggi sekitar 20 meter menghiasi fasadnya. Kuil ini dipindahkan batu demi batu pada 1964–1968 agar tidak tenggelam oleh Danau Nasser.',
+    fungsi:'Propaganda kekuasaan Ramses II di wilayah Nubia serta tempat pemujaan dewa-dewa kerajaan.' },
+  { name:'Kuil Hatshepsut (Deir el-Bahari)', grp:'Thebes & Nubia', x:110, z:-55, build:buildHatshepsut,
+    loc:'Deir el-Bahari, Thebes Barat (tepi barat Nil)',
+    date:'±1479–1458 SM · Dinasti XVIII',
+    desc:'Kuil bertingkat yang menyatu dengan tebing karang. Dibangun untuk Ratu-Firaun Hatshepsut dengan deretan kolom di setiap teras.',
+    fungsi:'Kuil kematian dan pemujaan; Hatshepsut dihubungkan dengan Amun, dan relief kuil menggambarkan ekspedisi dagang ke negeri Punt.' },
+  { name:'Obelisk Berdiri', grp:'Thebes & Nubia', x:36, z:18, build:buildObelisk,
+    loc:'Karnak, Thebes (Luxor)',
+    date:'±1450–1400 SM · Kerajaan Baru (Dinasti XVIII)',
+    desc:'Pilar batu granit tinggi bertampang persegi yang menyempit ke atas dan diakhiri ujung piramidion runcing, yang biasanya dilapisi emas atau elektrum.',
+    fungsi:'Simbol sinar matahari dewa Ra; didirikan berpasangan di depan kuil sebagai penanda kesakralan.' },
+  { name:'Obelisk Roboh (Belum Selesai)', grp:'Thebes & Nubia', x:10, z:-88, build:buildUnfinished,
+    loc:'Tambang granit Aswan, Mesir Selatan',
+    date:'±1460 SM · Dinasti XVIII',
+    desc:'Obelisk yang belum selesai dipahat dan masih menyatu dengan batu induknya. Retakan yang muncul selama pengerjaan membuat batu ini ditinggalkan di tambang.',
+    fungsi:'Menunjukkan teknik pemotongan dan pemahatan granit tanpa alat besi modern; gambaran proses pembuatan obelisk.' },
+  { name:'Perahu Matahari Khufu', grp:'Giza', x:-22, z:-54, build:buildBarque,
+    loc:'Giza, di sisi selatan Piramida Khufu',
+    date:'±2550 SM · Dinasti IV',
+    desc:'Perahu kayu cedar Lebanon sepanjang sekitar 43 meter. Ditemukan utuh dalam lubang batu di dekat piramida pada 1954 dan kini dipamerkan dalam museum khusus.',
+    fungsi:'Perahu ritual untuk mengantar roh Khufu mengarungi langit bersama dewa Ra.' },
+  { name:'Sarkofagus Emas Tutankhamun', grp:'Museum Plaza', x:-130, z:40, build:buildSarco,
+    loc:'Lembah Para Raja, Thebes Barat',
+    date:'±1323 SM · Dinasti XVIII',
+    desc:'Peti mati berlapis emas murni dengan hiasan batu lapis lazuli. Bagian kepala dan dada dibuat sangat rinci untuk merepresentasikan wajah sang firaun muda.',
+    fungsi:'Wadah jenazah Firaun agar ia dapat bangkit dan hidup kekal di alam baka.' },
+  { name:'Topeng Kematian Tutankhamun', grp:'Museum Plaza', x:-108, z:40, build:buildMask,
+    loc:'Lembah Para Raja, Thebes Barat',
+    date:'±1323 SM · Dinasti XVIII',
+    desc:'Topeng pemakaman dari emas, lapis lazuli, dan kaca dengan berat sekitar 11 kilogram emas. Menampilkan wajah idealis sang firaun dengan nemes bergaris biru dan emas.',
+    fungsi:'Melindungi dan mengabadikan wajah firaun; melambangkan identitas dan kekuasaan ilahi di alam baka.' },
+  { name:'Batu Rosetta', grp:'Museum Plaza', x:-86, z:40, build:buildRosetta,
+    loc:'Ditemukan di Rashid (Rosetta), Delta Nil, 1799',
+    date:'196 SM · Era Ptolemaik',
+    desc:'Batu basal berukir satu dekret yang sama dalam tiga aksara: hieroglif, demotik, dan Yunani. Perbandingan ketiga teks inilah yang membuka jalan memahami hieroglif.',
+    fungsi:'Kunci utama penerjemahan hieroglif modern oleh Jean-François Champollion pada 1822.' },
+  { name:'Meja Scribe & Payung Papirus', grp:'Museum Plaza', x:-64, z:40, build:buildPapyrus,
+    loc:'Thebes dan Memphis (Mesir)',
+    date:'±2500–1000 SM · Kerajaan Lama hingga Kerajaan Baru',
+    desc:'Perlengkapan juru tulis: meja kerja, pot tinta, dan gulungan papirus, dinaungi payung berkolom papirus. Hanya kalangan terdidik yang mampu menggunakannya.',
+    fungsi:'Juru tulis (scribe) mengelola administrasi, pajak, dan arsip kerajaan; papirus adalah media tulis utama.' },
+  { name:'Patung Dewa Anubis', grp:'Museum Plaza', x:-42, z:40, build:buildAnubis,
+    loc:'Makam Kerajaan Baru, Thebes',
+    date:'±1550–1070 SM · Kerajaan Baru',
+    desc:'Patung dewa berkepala serigala/anjing hitam dengan kulit hitam sebagai simbol kesuburan dan kebangkitan. Dipasang di atas dasar emas dengan kalung ritual.',
+    fungsi:'Penjaga makam dan pemandu jiwa; ia menimbang hati almarhum di hadapan Maat dalam pengadilan Osiris.' },
+  { name:'Dewi Bastet & Guci Kanopik', grp:'Museum Plaza', x:-20, z:40, build:buildBastet,
+    loc:'Makam Mesir (Bastet: Periode Akhir; guci: Kerajaan Baru)',
+    date:'±664–332 SM (Bastet) · ±1550–1070 SM (guci kanopik)',
+    desc:'Patung dewi berkepala kucing dalam posisi duduk, bersama empat guci kanopik berpenutup kepala manusia dan hewan yang menyimpan organ dalam jenazah.',
+    fungsi:'Bastet adalah dewi pelindung rumah dan kesuburan; guci kanopik menyimpan organ almarhum untuk kehidupan setelah mati.' }
+];
+
+/* ================= SETUP RENDERER / SCENE ================= */
+const wrap = document.getElementById('wrap');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+wrap.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(THEMES.light.fog, 380, 1100);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 3000);
+const HOME_POS = new THREE.Vector3(70, 120, 230);
+const HOME_T = new THREE.Vector3(30, 0, 0);
+camera.position.copy(HOME_POS);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.copy(HOME_T);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 12;
+controls.maxDistance = 420;
+controls.maxPolarAngle = Math.PI / 2.02;
+controls.update();
+
+/* ================= LIGHTS ================= */
+const sun = new THREE.DirectionalLight(THEMES.light.sun, THEMES.light.sunI);
+sun.position.set(120, 180, 90);
+sun.target.position.copy(HOME_T);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left:-220, right:220, top:220, bottom:-220, near:10, far:700 });
+sun.shadow.bias = -0.0006;
+scene.add(sun, sun.target);
+
+const ambient = new THREE.AmbientLight(THEMES.light.amb, THEMES.light.ambI);
+scene.add(ambient);
+const hemi = new THREE.HemisphereLight(THEMES.light.hemiSky, THEMES.light.hemiGround, THEMES.light.hemiI);
+scene.add(hemi);
+
+/* ================= LANGIT (DOME GRADIEN) ================= */
+const skyGeo = new THREE.SphereGeometry(1400, 32, 16);
+skyGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(skyGeo.attributes.position.count * 3), 3));
+const sky = new THREE.Mesh(skyGeo, new THREE.MeshBasicMaterial({ vertexColors:true, side:THREE.BackSide, fog:false, depthWrite:false }));
+sky.renderOrder = -1;
+scene.add(sky);
+
+function paintSky(topHex, bottomHex){
+  const top = new THREE.Color(topHex), bot = new THREE.Color(bottomHex), c = new THREE.Color();
+  const pos = skyGeo.attributes.position, col = skyGeo.attributes.color;
+  for(let i = 0; i < pos.count; i++){
+    const t = Math.min(1, Math.max(0, Math.pow(Math.max(0, pos.getY(i)) / 1000, 0.6)));
+    c.copy(bot).lerp(top, t);
+    col.setXYZ(i, c.r, c.g, c.b);
+  }
+  col.needsUpdate = true;
+}
+
+/* ================= TEKSTUR PASIR PROSEDURAL ================= */
+function makeSandTexture(){
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#ffffff';
+  g.fillRect(0, 0, 256, 256);
+  for(let i = 0; i < 9000; i++){
+    const v = 200 + Math.floor(Math.random() * 55);
+    g.fillStyle = `rgba(${v},${v},${v},0.35)`;
+    g.fillRect(Math.random() * 256, Math.random() * 256, 1.5, 1.5);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(90, 90);
+  return t;
+}
+
+/* ================= TANAH, SUNGAI, BUKIT PASIR ================= */
+const sandMats = [];
+const groundMat = new THREE.MeshStandardMaterial({ map: makeSandTexture(), color: THEMES.light.sand, roughness: 1 });
+sandMats.push(groundMat);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(1800, 1800), groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+const bankMat = new THREE.MeshStandardMaterial({ color: THEMES.light.bank, roughness: 1 });
+const bank = new THREE.Mesh(new THREE.PlaneGeometry(470, 24), bankMat);
+bank.rotation.x = -Math.PI / 2;
+bank.position.set(5, 0.05, 0);
+bank.receiveShadow = true;
+scene.add(bank);
+
+const riverMat = new THREE.MeshStandardMaterial({ color: THEMES.light.water, roughness: 0.15, metalness: 0.1 });
+const river = new THREE.Mesh(new THREE.PlaneGeometry(470, 15), riverMat);
+river.rotation.x = -Math.PI / 2;
+river.position.set(5, 0.1, 0);
+river.receiveShadow = true;
+scene.add(river);
+
+const duneMat = new THREE.MeshStandardMaterial({ color: THEMES.light.sand, roughness: 1 });
+sandMats.push(duneMat);
+const duneGeo = new THREE.SphereGeometry(1, 24, 12);
+for(let i = 0; i < 26; i++){
+  const d = new THREE.Mesh(duneGeo, duneMat);
+  const s = 18 + Math.random() * 34;
+  d.scale.set(s * 1.8, s * 0.35, s);
+  d.position.set(-260 + Math.random() * 560, 0, (Math.random() < 0.5 ? -1 : 1) * (90 + Math.random() * 110));
+  d.receiveShadow = true;
+  scene.add(d);
+}
+
+/* ================= POHON PALEM (INSTANCED) ================= */
+const palmSpots = [];
+for(let x = -200; x <= 240; x += 11){
+  for(const s of [-1, 1]){
+    if(Math.random() < 0.2) continue;
+    palmSpots.push({ x: x + (Math.random() - 0.5) * 5, z: s * (10.5 + Math.random() * 2.5),
+                     sc: 0.85 + Math.random() * 0.35, rot: Math.random() * Math.PI * 2 });
+  }
+}
+const NP = palmSpots.length;
+const trunkG = new THREE.CylinderGeometry(0.22, 0.4, 9, 8); trunkG.translate(0, 4.5, 0);
+const leafG = new THREE.BoxGeometry(0.35, 0.08, 4.2); leafG.translate(0, 0, 2.1);
+const trunkM = new THREE.InstancedMesh(trunkG, new THREE.MeshStandardMaterial({ color:0x8B6A3E, roughness:0.9 }), NP);
+const leafM = new THREE.InstancedMesh(leafG, new THREE.MeshStandardMaterial({ color:0x3F7D3A, roughness:0.7 }), NP * 8);
+{
+  const baseM = new THREE.Matrix4(), trM = new THREE.Matrix4(), rotM = new THREE.Matrix4(),
+        rxM = new THREE.Matrix4(), locM = new THREE.Matrix4(), q = new THREE.Quaternion(),
+        p = new THREE.Vector3(), sc = new THREE.Vector3();
+  palmSpots.forEach((s, i) => {
+    p.set(s.x, 0, s.z); sc.set(s.sc, s.sc, s.sc);
+    baseM.compose(p, q, sc);
+    trunkM.setMatrixAt(i, baseM);
+    for(let k = 0; k < 8; k++){
+      trM.makeTranslation(0, 9, 0);
+      rotM.makeRotationY(s.rot + k * Math.PI / 4);
+      rxM.makeRotationX(0.35 + Math.random() * 0.3);
+      locM.copy(baseM).multiply(trM).multiply(rotM).multiply(rxM);
+      leafM.setMatrixAt(i * 8 + k, locM);
+    }
+  });
+  trunkM.instanceMatrix.needsUpdate = true;
+  leafM.instanceMatrix.needsUpdate = true;
+}
+[trunkM, leafM].forEach(m => { m.castShadow = true; m.frustumCulled = false; scene.add(m); });
+
+/* ================= HELPER MODEL PROSEDURAL ================= */
+function mat(color, o = {}){
+  return new THREE.MeshStandardMaterial({
+    color, roughness: o.r ?? 0.85, metalness: o.m ?? 0, flatShading: !!o.flat, emissive: 0x000000
+  });
+}
+function part(parent, geo, color, x, y, z, o = {}){
+  const m = new THREE.Mesh(geo, mat(color, o));
+  m.position.set(x, y, z);
+  if(o.rot) m.rotation.set(o.rot[0], o.rot[1], o.rot[2]);
+  m.castShadow = true;
+  m.receiveShadow = true;
+  parent.add(m);
+  return m;
+}
+function box(p, w, h, d, c, x, y, z, o){ return part(p, new THREE.BoxGeometry(w, h, d), c, x, y, z, o); }
+function cyl(p, rt, rb, h, seg, c, x, y, z, o){ return part(p, new THREE.CylinderGeometry(rt, rb, h, seg), c, x, y, z, o); }
+function cone(p, r, h, seg, c, x, y, z, o){ return part(p, new THREE.ConeGeometry(r, h, seg), c, x, y, z, o); }
+function sph(p, r, c, x, y, z, o){ return part(p, new THREE.SphereGeometry(r, 20, 14), c, x, y, z, o); }
+function pyramid(p, side, h, c, x, z, yBase = 0){
+  const g = new THREE.ConeGeometry(side / Math.SQRT2, h, 4);
+  g.rotateY(Math.PI / 4);
+  return part(p, g, c, x, yBase + h / 2, z, { flat: true });
+}
+function plinth(g, w, d){ box(g, w, 2.2, d, 0xF3E3BE, 0, 1.1, 0, { r: 0.9 }); }
+
+/* ================= BANGUNAN ARTEFAK ================= */
+function buildKhufu(g){
+  box(g, 46, 1.2, 46, 0xD9B66A, 0, 0.6, 0, { r: 1 });
+  pyramid(g, 40, 30, 0xE8CC92, 0, 0);
+}
+function buildKhafre(g){
+  box(g, 38, 1.2, 38, 0xD9B66A, 0, 0.6, 0, { r: 1 });
+  pyramid(g, 36, 28, 0xDCB97A, 0, 0);
+  pyramid(g, 7.9, 6.2, 0xF6F0DE, 0, 0, 21.84);   // sisa selubung kapur di puncak
+}
+function buildMenkaure(g){
+  pyramid(g, 16, 14, 0xE5CB94, 0, 0);
+}
+function buildSphinx(g){
+  const c = 0xD8B56F;
+  box(g, 46, 1, 22, 0xE6CB8F, 0, 0.5, 0, { r: 1 });   // dasar pasir
+  box(g, 20, 9, 9, c, -1, 5.5, 0);                    // tubuh singa
+  box(g, 8, 4, 10, c, 8, 2.5, 0);                     // cakar depan
+  box(g, 6, 6, 6, c, 9, 11, 0);                       // kepala
+  box(g, 7.4, 8, 7.4, 0xE0BF78, 9, 12.5, 0);          // nemes
+  box(g, 1.2, 5, 1, 0xD4AF37, 13.2, 8.5, 0, { m: 0.6, r: 0.4 }); // janggut
+}
+function buildKarnak(g){
+  box(g, 60, 1.4, 30, 0xE9D1A2, 0, 0.7, 0, { r: 1 });
+  const colGeo = new THREE.CylinderGeometry(0.9, 1.1, 16, 12);
+  const capGeo = new THREE.CylinderGeometry(1.7, 1.2, 1.6, 12);
+  const colM = mat(0xE7C98E, { r: 0.9 }), capM = mat(0xD9B070, { r: 0.9 });
+  for(let r = 0; r < 3; r++){
+    for(let i = 0; i < 7; i++){
+      const h = r === 1 ? 22 : 16;
+      const x = -24 + i * 8, z = -9 + r * 9;
+      const col = new THREE.Mesh(colGeo, colM);
+      col.position.set(x, 1.4 + h / 2, z);
+      col.scale.y = h / 16;
+      col.castShadow = col.receiveShadow = true;
+      g.add(col);
+      const cap = new THREE.Mesh(capGeo, capM);
+      cap.position.set(x, 1.4 + h + 0.8, z);
+      cap.castShadow = true;
+      g.add(cap);
+    }
+  }
+  box(g, 6, 26, 10, 0xE0BC7C, -30, 14.4, 0);   // pylon
+  box(g, 6, 26, 10, 0xE0BC7C, 30, 14.4, 0);    // pylon
+}
+function seated(g, x){
+  const c = 0xE2B77C, z = 7;
+  box(g, 9, 3, 8, c, x, 1.5, z);
+  box(g, 8, 6, 6, c, x, 6, z);
+  box(g, 7, 10, 5, c, x, 11, z);
+  box(g, 4, 4.5, 4, c, x, 18.25, z);
+  box(g, 5.6, 6, 5.6, 0xD9A86C, x, 18, z);
+}
+function buildAbu(g){
+  box(g, 64, 30, 10, 0xD9A86C, 0, 15, 0, { r: 0.95 });
+  box(g, 6, 12, 1, 0x2B1B0E, 0, 6, 5.1, { r: 1 });
+  for(const x of [-24, -9, 9, 24]) seated(g, x);
+}
+function buildHatshepsut(g){
+  const c = 0xE6C68E, pil = 0xF3E2B8;
+  box(g, 56, 22, 10, 0xC9A46A, 0, 11, -16, { r: 0.95 });   // tebing
+  box(g, 46, 3, 18, c, 0, 1.5, 0);                         // teras 1
+  box(g, 38, 3, 14, c, 0, 4.5, -2);                        // teras 2
+  box(g, 30, 3, 10, c, 0, 7.5, -4);                        // teras 3
+  for(let i = 0; i < 7; i++) box(g, 1.3, 6, 1.3, pil, -18 + i * 6, 6, 8.3);
+  for(let i = 0; i < 5; i++) box(g, 1.3, 6, 1.3, pil, -12 + i * 6, 9, 4.3);
+  for(let i = 0; i < 4; i++) box(g, 1.3, 6, 1.3, pil, -9 + i * 6, 12, 0.3);
+}
+function buildObelisk(g){
+  box(g, 4.6, 1.6, 4.6, 0xC9B49A, 0, 0.8, 0, { r: 0.9 });
+  const sh = cyl(g, 1.2, 1.5, 26, 4, 0xD9956A, 0, 14.6, 0, { r: 0.7 });
+  sh.rotation.y = Math.PI / 4;
+  const tip = cone(g, 1.2, 4, 4, 0xD4AF37, 0, 29.6, 0, { m: 0.8, r: 0.3 });
+  tip.rotation.y = Math.PI / 4;
+}
+function buildUnfinished(g){
+  box(g, 8, 1.2, 6, 0xB98055, 0, 0.6, 0, { r: 1 });
+  const sh = cyl(g, 0.9, 1.25, 28, 6, 0xC98F5E, 0, 1.9, 0, { r: 0.8 });
+  sh.rotation.z = Math.PI / 2;
+  box(g, 3, 2, 2.6, 0xB98055, 12, 1, 0, { r: 1 });
+}
+function buildBarque(g){
+  const w = 0x8B5A2B, w2 = 0xA86E36;
+  box(g, 22, 2, 6, w, 0, 1.2, 0);
+  box(g, 4, 4, 1.2, w2, 11.5, 3.2, 0, { rot: [0, 0, -0.5] });
+  box(g, 4, 4, 1.2, w2, -11.5, 3.2, 0, { rot: [0, 0, 0.5] });
+  box(g, 6, 1.8, 4, 0xC9A06A, 0, 3.1, 0);
+  box(g, 14, 0.3, 0.3, 0x6B4226, 0, 2.5, 3.4);
+  box(g, 14, 0.3, 0.3, 0x6B4226, 0, 2.5, -3.4);
+}
+function buildSarco(g){
+  plinth(g, 10, 8);
+  const gold = 0xD4AF37, lap = 0x1E4E9A, y0 = 2.2;
+  box(g, 6.4, 1.2, 2.6, 0xB8902E, 0, y0 + 0.6, 0, { m: 0.6, r: 0.35 });
+  box(g, 5.6, 2.2, 2.2, gold, 0.2, y0 + 2.3, 0, { m: 0.7, r: 0.3 });
+  box(g, 1.5, 1.6, 1.6, gold, -3.2, y0 + 3.4, 0, { m: 0.7, r: 0.3 });
+  for(const x of [-1.5, -0.5, 0.5, 1.5]) box(g, 0.4, 0.12, 2.3, lap, x, y0 + 3.45, 0);
+}
+function buildMask(g){
+  plinth(g, 8, 8);
+  const gold = 0xD4AF37, blue = 0x1E4E9A, y = 4.3;
+  const m = sph(g, 1.7, gold, 0, y, 0, { m: 0.8, r: 0.25 });
+  m.scale.set(1, 1.25, 0.85);
+  box(g, 0.55, 2.8, 1.4, blue, -1.45, y - 0.2, 0.2);
+  box(g, 0.55, 2.8, 1.4, blue, 1.45, y - 0.2, 0.2);
+  box(g, 0.22, 2.7, 1.5, gold, -0.85, y - 0.2, 0.3);
+  box(g, 0.22, 2.7, 1.5, gold, 0.85, y - 0.2, 0.3);
+  box(g, 0.4, 1.2, 0.4, gold, 0, y - 2.6, 1.1, { m: 0.8, r: 0.25 });
+}
+function buildRosetta(g){
+  plinth(g, 8, 8);
+  const y = 2.2;
+  box(g, 5.2, 3.6, 1.6, 0x2F2F33, 0, y + 1.8, 0, { r: 0.55, m: 0.1 });
+  for(let i = 0; i < 7; i++) box(g, 4.2, 0.16, 0.06, 0xC9B896, 0, y + 0.7 + i * 0.45, 0.82);
+}
+function buildPapyrus(g){
+  plinth(g, 10, 8);
+  const y = 2.2, wood = 0x9B6B3C;
+  box(g, 4.2, 0.4, 2.4, wood, 2, y + 2.2, 0);            // meja scribe
+  box(g, 0.3, 2, 0.3, wood, 0.2, y + 1, 1);
+  box(g, 0.3, 2, 0.3, wood, 3.8, y + 1, -1);
+  cyl(g, 0.35, 0.35, 0.5, 12, 0x1F2937, 2.8, y + 2.65, 0.5);   // pot tinta
+  cyl(g, 0.22, 0.22, 2.2, 12, 0xF1E3B3, 0.8, y + 2.62, -0.3, { rot: [0, 0, Math.PI / 2] });
+  cyl(g, 0.18, 0.22, 6.5, 10, 0xC8A060, -3, y + 3.25, 0);      // tiang payung
+  const can = cone(g, 3.2, 1.4, 14, 0x7BA36B, -3, y + 6.5, 0);
+  can.rotation.x = Math.PI;
+}
+function buildAnubis(g){
+  plinth(g, 8, 8);
+  const y = 2.2, blk = 0x232634, gold = 0xD4AF37;
+  box(g, 2.8, 0.5, 2, gold, 0, y + 0.25, 0, { m: 0.6, r: 0.35 });
+  box(g, 2.2, 3.6, 1.6, blk, 0, y + 2.3, 0, { r: 0.6 });
+  box(g, 2.6, 0.4, 1.8, gold, 0, y + 3.9, 0, { m: 0.6, r: 0.35 });
+  box(g, 1.6, 1.6, 1.6, blk, 0, y + 5.1, 0, { r: 0.6 });
+  box(g, 1.1, 0.9, 1.8, blk, 0, y + 4.8, 1.3, { r: 0.6 });
+  cone(g, 0.35, 1.2, 4, blk, -0.45, y + 6.5, 0);
+  cone(g, 0.35, 1.2, 4, blk, 0.45, y + 6.5, 0);
+  box(g, 0.2, 3.2, 0.2, gold, 1.7, y + 2.6, 0.4, { m: 0.6, r: 0.35 });
+}
+function buildBastet(g){
+  plinth(g, 8, 8);
+  const y = 2.2, bronze = 0xB07A3A, stone = 0xCDB58A;
+  const body = sph(g, 1.3, bronze, -1.1, y + 2.0, 0);
+  body.scale.set(0.9, 1.5, 0.9);
+  sph(g, 0.85, bronze, -1.1, y + 4.2, 0);
+  cone(g, 0.3, 0.8, 4, bronze, -1.4, y + 5.1, 0);
+  cone(g, 0.3, 0.8, 4, bronze, -0.8, y + 5.1, 0);
+  const lids = [0xD4AF37, 0x6B4226, 0x2F6B5A, 0xB07A3A];
+  [0.6, 1.6, 2.6, 3.4].forEach((x, i) => {
+    cyl(g, 0.42, 0.45, 1.4, 12, stone, x, y + 0.7, 0.8);
+    sph(g, 0.36, lids[i], x, y + 1.65, 0.8, { m: 0.5, r: 0.4 });
+  });
+}
+
+/* ================= BUAT GRUP ARTEFAK + BOUNDING ================= */
+const clickables = [];
+ARTS.forEach((a, idx) => {
+  const g = new THREE.Group();
+  g.position.set(a.x, 0, a.z);
+  scene.add(g);
+  a.build(g);
+  g.updateMatrixWorld(true);
+  const box3 = new THREE.Box3().setFromObject(g);
+  const c = box3.getCenter(new THREE.Vector3());
+  const s = box3.getSize(new THREE.Vector3());
+  a.center = c;
+  a.size = Math.max(s.x, s.y, s.z, 8);
+  a.radius = Math.max(s.x, s.z) * 0.62 + 1.5;
+  a.group = g;
+  g.traverse(o => { if(o.isMesh){ o.userData.art = idx; clickables.push(o); } });
+});
+
+/* ================= HALO (PENANDA) ================= */
+const halo = new THREE.Mesh(
+  new THREE.RingGeometry(0.9, 1, 64),
+  new THREE.MeshBasicMaterial({ color:0xD4AF37, transparent:true, opacity:0.95, side:THREE.DoubleSide, depthWrite:false })
+);
+halo.rotation.x = -Math.PI / 2;
+halo.visible = false;
+scene.add(halo);
+const glow = new THREE.Mesh(
+  new THREE.CircleGeometry(1, 48),
+  new THREE.MeshBasicMaterial({ color:0xFFE9A8, transparent:true, opacity:0.2, depthWrite:false })
+);
+glow.rotation.x = -Math.PI / 2;
+glow.visible = false;
+scene.add(glow);
+
+/* ================= UI ================= */
+const listEl = document.getElementById('list');
+const cardEl = document.getElementById('card');
+const tipEl = document.getElementById('tip');
+const btnTheme = document.getElementById('btnTheme');
+
+ARTS.forEach((a, i) => {
+  const b = document.createElement('button');
+  b.className = 'item';
+  b.innerHTML = `<span class="no">${String(i + 1).padStart(2, '0')}</span><span>${a.name}</span>`;
+  b.addEventListener('click', () => select(i));
+  listEl.appendChild(b);
+});
+
+let selected = -1, hovered = -1, tween = null;
+
+function fillCard(i){
+  const a = ARTS[i];
+  document.getElementById('cGrp').textContent = a.grp;
+  document.getElementById('cName').textContent = a.name;
+  document.getElementById('cLoc').textContent = a.loc;
+  document.getElementById('cDate').textContent = a.date;
+  document.getElementById('cDesc').textContent = a.desc;
+  document.getElementById('cFungsi').textContent = a.fungsi;
+}
+function markList(i){
+  listEl.querySelectorAll('.item').forEach((b, k) => b.classList.toggle('active', k === i));
+}
+function select(i){
+  selected = i;
+  fillCard(i);
+  markList(i);
+  cardEl.classList.remove('hidden');
+  flyTo(i);
+}
+function closeCard(){
+  selected = -1;
+  cardEl.classList.add('hidden');
+  markList(-1);
+}
+document.getElementById('close').addEventListener('click', closeCard);
+
+function flyTo(i){
+  const a = ARTS[i];
+  const dist = Math.max(28, a.size * 1.7);
+  const target = new THREE.Vector3(a.center.x, a.center.y + a.size * 0.2, a.center.z);
+  const dir = new THREE.Vector3(0.55, 0.42, 0.72).normalize();
+  tween = {
+    t0: performance.now(), dur: 1300,
+    fromP: camera.position.clone(), fromT: controls.target.clone(),
+    toP: target.clone().addScaledVector(dir, dist), toT: target
+  };
+}
+document.getElementById('btnReset').addEventListener('click', () => {
+  closeCard();
+  tween = { t0: performance.now(), dur: 1300,
+    fromP: camera.position.clone(), fromT: controls.target.clone(),
+    toP: HOME_POS.clone(), toT: HOME_T.clone() };
+});
+controls.addEventListener('start', () => { tween = null; });
+
+/* ================= RAYCASTING / HOVER ================= */
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2(-9, -9);
+let needPick = false;
+let pointerDown = null;
+
+function setGlow(i, on){
+  if(i < 0) return;
+  ARTS[i].group.traverse(o => {
+    if(o.isMesh && o.material.emissive) o.material.emissive.setHex(on ? 0x4A3300 : 0x000000);
+  });
+}
+function pick(){
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(clickables, false);
+  const idx = hits.length ? hits[0].object.userData.art : -1;
+  if(idx !== hovered){
+    setGlow(hovered, false);
+    hovered = idx;
+    setGlow(hovered, true);
+    renderer.domElement.style.cursor = idx >= 0 ? 'pointer' : 'grab';
+    if(idx >= 0){
+      tipEl.textContent = ARTS[idx].name;
+      tipEl.style.opacity = 1;
+    } else {
+      tipEl.style.opacity = 0;
+    }
+  }
+}
+renderer.domElement.addEventListener('pointermove', e => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  tipEl.style.left = (e.clientX + 14) + 'px';
+  tipEl.style.top = (e.clientY + 14) + 'px';
+  needPick = true;
+});
+renderer.domElement.addEventListener('pointerdown', e => {
+  pointerDown = { x: e.clientX, y: e.clientY };
+});
+renderer.domElement.addEventListener('pointerup', e => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  pick();
+  if(pointerDown && Math.hypot(e.clientX - pointerDown.x, e.clientY - pointerDown.y) < 6 && hovered >= 0){
+    select(hovered);
+  }
+  pointerDown = null;
+});
+renderer.domElement.addEventListener('pointerleave', () => {
+  setGlow(hovered, false);
+  hovered = -1;
+  tipEl.style.opacity = 0;
+});
+
+/* ================= TEMA SIANG / MALAM ================= */
+function applyTheme(name){
+  const t = THEMES[name];
+  paintSky(t.top, t.bottom);
+  groundMat.color.set(t.sand);
+  duneMat.color.set(t.sand);
+  bankMat.color.set(t.bank);
+  riverMat.color.set(t.water);
+  sun.color.set(t.sun);
+  sun.intensity = t.sunI;
+  ambient.color.set(t.amb);
+  ambient.intensity = t.ambI;
+  hemi.color.set(t.hemiSky);
+  hemi.groundColor.set(t.hemiGround);
+  hemi.intensity = t.hemiI;
+  scene.fog.color.set(t.fog);
+  document.body.classList.toggle('dark', name === 'dark');
+  btnTheme.textContent = name === 'dark' ? '☀️ Siang' : '🌙 Malam';
+}
+btnTheme.addEventListener('click', () => {
+  const next = document.body.classList.contains('dark') ? 'light' : 'dark';
+  applyTheme(next);
+});
+applyTheme('light');
+
+/* ================= RESIZE ================= */
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ================= LOOP ANIMASI ================= */
+function easeInOutCubic(k){ return k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; }
+
+function animate(){
+  requestAnimationFrame(animate);
+  const now = performance.now();
+
+  if(needPick){ needPick = false; pick(); }
+
+  if(tween){
+    const k = Math.min(1, (now - tween.t0) / tween.dur);
+    const e = easeInOutCubic(k);
+    camera.position.lerpVectors(tween.fromP, tween.toP, e);
+    controls.target.lerpVectors(tween.fromT, tween.toT, e);
+    if(k >= 1) tween = null;
+  }
+
+  const active = hovered >= 0 ? hovered : selected;
+  if(active >= 0){
+    const a = ARTS[active];
+    const pulse = 1 + 0.05 * Math.sin(now * 0.006);
+    halo.visible = true;
+    halo.position.set(a.center.x, 0.2, a.center.z);
+    halo.scale.set(a.radius * pulse, a.radius * pulse, 1);
+    glow.visible = true;
+    glow.position.set(a.center.x, 0.18, a.center.z);
+    glow.scale.set(a.radius * 1.15, a.radius * 1.15, 1);
+  } else {
+    halo.visible = false;
+    glow.visible = false;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+})();
+</script>
+</body>
+</html>
