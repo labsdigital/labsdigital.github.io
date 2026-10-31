@@ -60,6 +60,10 @@ textarea.out{min-height:280px;font-size:13px;font-family:ui-monospace,Menlo,Cons
 .err{color:#B3261E;font-size:13.5px;font-weight:700}
 .hidden{display:none!important}
 footer{padding:40px 0 60px;color:var(--mute);font-size:14px}
+body.presenting{background:#000}
+body.presenting .wrap{display:none!important}
+#stage{position:fixed;inset:0;background:#000;display:grid;place-items:center;z-index:100}
+#stage canvas{width:min(100vw,177.78vh);height:min(100vh,56.25vw);display:block}
 </style>
 </head>
 <body>
@@ -69,6 +73,7 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px}
   <span class="kicker">Studio Motion Graphics</span>
   <h1>Ubah topikmu menjadi video animasi yang menarik</h1>
   <p class="lead">Pilih gaya visual, tulis topiknya, atur durasi dan audio. Salin prompt yang sudah jadi, tempelkan ke Claude, dan Claude akan membuat animasinya sebagai Artifact yang bisa diputar dan diunduh sebagai MP4.</p>
+  <div class="row" style="margin-top:22px"><button class="btn" id="present" type="button">▶ Mode presentasi (← → pindah slide, P keluar)</button></div>
   <ol class="steps">
     <li><b>1. Pilih gaya</b><span>Dua belas gaya visual, masing-masing dengan pratinjau animasi langsung.</span></li>
     <li><b>2. Tulis topik</b><span>Satu kalimat sudah cukup. Topik yang jelas menghasilkan adegan yang lebih tajam.</span></li>
@@ -129,11 +134,13 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px}
     <div class="field">
       <span class="lbl">Opsi produksi</span>
       <div class="toggles">
-        <label><input type="checkbox" id="sb" checked><span>Storyboard dulu</span></label>
+        <label><input type="checkbox" id="sb"><span>Storyboard dulu</span></label>
         <label><input type="checkbox" id="vo"><span>Voiceover (MP3)</span></label>
         <label><input type="checkbox" id="sub"><span>Subtitle (SRT)</span></label>
         <label><input type="checkbox" id="music"><span>Musik latar</span></label>
-        <label><input type="checkbox" id="sfx"><span>Efek suara</span></label>
+        <label><input type="checkbox" id="sfx" checked><span>Efek suara</span></label>
+        <label><input type="checkbox" id="html" checked><span>Simpan juga sebagai HTML</span></label>
+        <label><input type="checkbox" id="slides" checked><span>Mode presentasi per slide</span></label>
       </div>
     </div>
 
@@ -154,6 +161,8 @@ footer{padding:40px 0 60px;color:var(--mute);font-size:14px}
 <footer class="wrap">
   Versi Bahasa Indonesia dengan 12 gaya visual. Gaya tambahan: Batik Modern, Sketsa Papan Tulis, Synthwave Neon, dan Origami Lipat.
 </footer>
+
+<div id="stage" class="hidden" aria-label="Tayangan presentasi"><canvas id="stageCv"></canvas></div>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -468,11 +477,16 @@ function paint(t) {
 }
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const t0 = performance.now();
-function loop(now) { paint((now - t0) / 1000); requestAnimationFrame(loop); }
-if (reduce) paint(2); else requestAnimationFrame(loop);
+function loop(now) {
+  if (!reduce) paint((now - t0) / 1000);
+  if (presenting) drawStage(now);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+if (reduce) paint(2);
 
 /* ---------- pembuat prompt ---------- */
-const S = { idx: 0, topic: '', min: 0, sec: 30, vo: false, sb: true, sub: false, music: false, sfx: false, vert: false, script: '' };
+const S = { idx: 0, topic: '', min: 0, sec: 30, vo: false, sb: false, sub: false, music: false, sfx: true, html: true, slides: true, vert: false, script: '' };
 const fmtDur = sec => { const m = Math.floor(sec / 60), s = sec % 60; return [m ? m + ' menit' : '', s ? s + ' detik' : ''].filter(Boolean).join(' ') || '0 detik'; };
 const clampN = (v, a, b) => Math.max(a, Math.min(b, Math.floor(+v || 0)));
 
@@ -489,13 +503,15 @@ Buat video motion graphics dengan gaya **${s.name}** sebagai Artifact HTML inter
 - Storyboard: ${S.sb ? 'Aktif' : 'Nonaktif'}
 - Voiceover: ${vo ? 'Aktif, file MP3 dilampirkan' : 'Nonaktif'}
 - Naskah voiceover: ${vo && script ? '"' + script + '"' : '(tidak ada)'}
-- Subtitle: ${vo && S.sub ? 'Aktif, buat SRT dan tampilkan di layar' : 'Nonaktif'}
+- Subtitle: ${S.sub ? (vo ? 'Aktif, buat SRT yang selaras dengan voiceover dan tampilkan di layar' : 'Aktif, buat SRT berisi keterangan waktu dari penjelasan di layar tanpa mengarang ucapan') : 'Nonaktif'}
 - Durasi: ${dur}
 - Format: ${S.vert ? 'Vertikal 9:16 (1080 × 1920)' : 'Horizontal 16:9 (1920 × 1080)'}
 - Frame rate ekspor: 30 fps
 - Efek suara: ${S.sfx ? 'Aktif' : 'Nonaktif'}
 - Musik latar: ${S.music ? 'Aktif' : 'Nonaktif'}
-- Format file akhir: MP4
+- Simpan sebagai HTML mandiri: ${S.html ? 'Aktif' : 'Nonaktif'}
+- Mode presentasi per slide: ${S.slides ? 'Aktif' : 'Nonaktif'}
+- Format file akhir: MP4${S.html ? ' dan HTML mandiri' : ''}
 
 ## 2. Karakter gaya
 ${s.brief}
@@ -511,10 +527,20 @@ ${S.sb
 - Semua yang terlihat harus berada di dalam canvas yang direkam, bukan di overlay HTML yang hilang saat ekspor.
 
 ## 4. Pemutar
-Tombol putar dan jeda, ulang, timeline yang bisa digeser, waktu saat ini dan total, serta tombol Unduh Video.${vo ? ' Tambahkan tombol unggah MP3 jika file tidak bisa diakses.' : ''}${vo && S.sub ? ' Sediakan unduhan SRT.' : ''}
+Tombol putar dan jeda, ulang, timeline yang bisa digeser, waktu saat ini dan total, serta tombol Unduh Video.${vo ? ' Tambahkan tombol unggah MP3 jika file tidak bisa diakses.' : ''}${S.sub ? ' Sediakan unduhan SRT.' : ''}
 
-## 5. Ekspor
-Rekam canvas beserta semua audio yang aktif. Pastikan file benar-benar berformat MP4 (H.264 dan AAC jika didukung). Jika browser atau Artifact membatasi, jelaskan kendalanya secara singkat dan sediakan versi HTML mandiri. Jangan pernah mengganti nama file WebM menjadi .mp4.
+${S.slides ? `## 4a. Mode presentasi per slide
+- Bagi animasi menjadi slide berurutan. Setiap slide adalah satu adegan atau satu rangkaian beat utama, dan total durasi seluruh slide sama dengan runtime proyek.
+- Panah kanan: jika animasi slide saat ini belum selesai, selesaikan dulu. Jika sudah selesai, lanjut ke slide berikutnya.
+- Panah kiri: kembali ke slide sebelumnya dan putar ulang slide tersebut dari awal.
+- Tombol Home dan End: ke slide pertama dan terakhir. Spasi juga berfungsi sebagai maju. Klik mouse tidak mengubah slide.
+- Dengan voiceover: tentukan batas waktu setiap slide dari audio, memakai transkrip atau SRT jika tersedia. Jika tidak tersedia, bagi rata dan tandai sebagai estimasi.
+- Di luar mode presentasi: tampilkan menu, indikator "slide X dari Y", tombol sebelumnya dan berikutnya, serta pemutar.
+- Mode presentasi: tekan P (atau F) untuk masuk ke layar penuh. Pada mode ini SEMUA menu, tombol, timeline, judul kontrol, dan indikator disembunyikan, sehingga yang tampil hanya tayangan. Tekan P atau Esc untuk keluar.
+- Ekspor MP4 dan HTML tetap merekam seluruh slide secara berurutan dari awal sampai akhir.
+
+` : ''}## 5. Ekspor
+Rekam canvas beserta semua audio yang aktif. Pastikan file benar-benar berformat MP4 (H.264 dan AAC jika didukung). Jika browser atau Artifact membatasi, jelaskan kendalanya secara singkat. Jangan pernah mengganti nama file WebM menjadi .mp4.${S.html ? '\n\nSelain MP4, simpan animasi sebagai satu file HTML mandiri: semua CSS, JavaScript, font, dan aset tertanam dalam satu file tanpa dependensi server atau proses build, sehingga bisa dibuka langsung di browser. Sediakan tombol Unduh HTML dan pastikan file tersebut memutar animasi yang sama dengan pratinjau.' : ''}
 
 Mulai dari Tahap 1 sekarang.`;
 }
@@ -535,7 +561,7 @@ function selectStyle(i, scroll) {
 function update() {
   const tot = S.min * 60 + S.sec;
   $('scriptWrap').classList.toggle('hidden', !S.vo);
-  $('sub').disabled = !S.vo;
+  $('sub').disabled = false;
   $('derr').classList.toggle('hidden', S.vo || (tot >= 5 && tot <= 600));
   document.querySelectorAll('[data-p]').forEach(b => b.classList.toggle('on', +b.dataset.p === tot));
   document.querySelectorAll('[data-f]').forEach(b => b.classList.toggle('on', (b.dataset.f === 'v') === S.vert));
@@ -571,12 +597,55 @@ $('topic').addEventListener('input', e => { S.topic = e.target.value; if (S.topi
 $('script').addEventListener('input', e => { S.script = e.target.value; update(); });
 $('min').addEventListener('input', e => { S.min = clampN(e.target.value, 0, 10); update(); });
 $('sec').addEventListener('input', e => { S.sec = clampN(e.target.value, 0, 59); update(); });
-[['sb', 'sb'], ['vo', 'vo'], ['sub', 'sub'], ['music', 'music'], ['sfx', 'sfx']].forEach(([id, k]) =>
+[['sb', 'sb'], ['vo', 'vo'], ['sub', 'sub'], ['music', 'music'], ['sfx', 'sfx'], ['html', 'html'], ['slides', 'slides']].forEach(([id, k]) =>
   $(id).addEventListener('change', e => { S[k] = e.target.checked; update(); }));
 document.querySelectorAll('[data-f]').forEach(b => b.addEventListener('click', () => { S.vert = b.dataset.f === 'v'; update(); }));
 document.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => { const v = +b.dataset.p; S.min = Math.floor(v / 60); S.sec = v % 60; update(); }));
 $('ex').addEventListener('click', () => { const s = STYLES[S.idx]; S.topic = s.ex; $('topic').value = s.ex; $('terr').classList.add('hidden'); update(); });
 $('copy').addEventListener('click', copyPrompt);
+
+/* ---------- mode presentasi di aplikasi ---------- */
+let presenting = false, pIdx = 0, pT0 = 0;
+const stage = $('stage'), stageCv = $('stageCv'), sctx = stageCv.getContext('2d');
+function requestFS() { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen().catch(() => {}); }
+function startPresent() {
+  presenting = true; pIdx = 0; pT0 = performance.now();
+  document.body.classList.add('presenting'); stage.classList.remove('hidden'); requestFS();
+}
+function stopPresent() {
+  presenting = false;
+  document.body.classList.remove('presenting'); stage.classList.add('hidden');
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+}
+function goSlide(n) { if (n < 0 || n >= STYLES.length) return; pIdx = n; pT0 = performance.now(); }
+function drawStage(now) {
+  const w = stageCv.clientWidth, h = stageCv.clientHeight;
+  if (!w) return;
+  const W = Math.round(w * dpr), H = Math.round(h * dpr);
+  if (stageCv.width !== W || stageCv.height !== H) { stageCv.width = W; stageCv.height = H; }
+  sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  STYLES[pIdx].draw(sctx, w, h, (now - pT0) / 1000);
+}
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && presenting) stopPresent(); });
+document.addEventListener('keydown', e => {
+  if (presenting) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goSlide(pIdx + 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); goSlide(pIdx - 1); }
+    else if (e.key === 'Home') goSlide(0);
+    else if (e.key === 'End') goSlide(STYLES.length - 1);
+    else if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') stopPresent();
+    return;
+  }
+  if ((e.key === 'p' || e.key === 'P') && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) startPresent();
+});
+$('present').addEventListener('click', startPresent);
+
+/* sinkronkan checkbox dengan nilai default S (mencegah status lama dari browser) */
+function syncChecks() {
+  ['sb', 'vo', 'sub', 'music', 'sfx', 'html', 'slides'].forEach(k => { $(k).checked = !!S[k]; });
+  $('sub').disabled = false;
+}
+syncChecks();
 
 selectStyle(0, false);
 </script>
