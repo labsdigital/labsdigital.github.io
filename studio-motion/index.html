@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Studio Motion Graphics: Bahasa Indonesia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4EFE4;--paper:#FFFCF5;--ink:#1E2430;--mute:#5B6270;--acc:#E4572E;--teal:#2A9D8F;--gold:#F4B942}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:16px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+header.hero{padding:64px 0 36px}
+.kicker{font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:13px;color:var(--acc)}
+h1{font-family:'Fraunces',Georgia,serif;font-size:clamp(34px,5vw,58px);line-height:1.08;margin:10px 0 14px;font-weight:800;max-width:820px}
+.lead{font-size:19px;color:var(--mute);max-width:680px;margin:0}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:30px 0 0;padding:0;list-style:none}
+.steps li{background:var(--paper);border:2px solid var(--ink);border-radius:14px;padding:16px;box-shadow:4px 4px 0 var(--ink)}
+.steps b{display:block;font-family:'Fraunces',serif;font-size:18px;margin-bottom:4px}
+.steps span{font-size:14.5px;color:var(--mute)}
+h2{font-family:'Fraunces',serif;font-size:30px;margin:56px 0 6px}
+.sub-h{color:var(--mute);margin:0 0 22px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:26px}
+.card{background:var(--paper);border:2px solid var(--ink);border-radius:16px;padding:14px;box-shadow:5px 6px 0 var(--ink);display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:transform .2s}
+.card:hover{transform:translate(-2px,-3px)}
+.card:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+.card.on{outline:3px solid var(--acc);outline-offset:3px}
+.card canvas{width:100%;aspect-ratio:16/9;border-radius:10px;border:2px solid var(--ink);background:#1d2230;display:block}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card h3{font-family:'Fraunces',serif;font-size:21px;margin:0;line-height:1.2}
+.tag{font-size:12.5px;color:var(--teal);font-weight:700}
+.card p{margin:0;font-size:14.5px;color:var(--mute);flex:1}
+.num{flex:0 0 36px;height:36px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font-weight:800;background:var(--gold)}
+.new{display:inline-block;margin-left:6px;font-size:11px;font-weight:800;background:var(--teal);color:#fff;border-radius:999px;padding:1px 8px;vertical-align:middle}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--ink);color:#fff;border:2px solid var(--ink);border-radius:10px;padding:10px 16px;font-weight:700}
+.btn:hover{background:#333b4d}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.ghost:hover{background:#ECE5D4}
+.btn.ok{background:var(--teal);border-color:var(--teal)}
+.builder{margin-top:56px;background:var(--paper);border:2px solid var(--ink);border-radius:20px;padding:26px;box-shadow:6px 7px 0 var(--ink);display:grid;grid-template-columns:1fr 1fr;gap:28px;scroll-margin-top:20px}
+@media(max-width:820px){.builder{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.lbl{font-weight:700;font-size:14px}
+textarea,input[type=number]{font:inherit;border:2px solid var(--ink);border-radius:10px;padding:10px 12px;background:#fff;color:var(--ink);width:100%}
+input[type=number]{width:90px}
+textarea{min-height:88px;resize:vertical}
+textarea.out{min-height:280px;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace;background:#FBF8F0;line-height:1.45}
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.toggles label{display:flex;gap:8px;align-items:center;font-size:15px;cursor:pointer}
+.toggles input:disabled + span{opacity:.4}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{border:2px solid var(--ink);border-radius:999px;padding:4px 12px;background:#fff;font-size:13.5px;font-weight:600;color:var(--ink)}
+.chip.on{background:var(--gold)}
+.info dt{font-weight:700;margin-top:12px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--acc)}
+.info dd{margin:2px 0 0}
+.hint{font-size:13px;color:var(--mute)}
+.err{color:#B3261E;font-size:13.5px;font-weight:700}
+.hidden{display:none!important}
+footer{padding:40px 0 60px;color:var(--mute);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <span class="kicker">Studio Motion Graphics</span>
+  <h1>Ubah topikmu menjadi video animasi yang menarik</h1>
+  <p class="lead">Pilih gaya visual, tulis topiknya, atur durasi dan audio. Salin prompt yang sudah jadi, tempelkan ke Claude, dan Claude akan membuat animasinya sebagai Artifact yang bisa diputar dan diunduh sebagai MP4.</p>
+  <ol class="steps">
+    <li><b>1. Pilih gaya</b><span>Dua belas gaya visual, masing-masing dengan pratinjau animasi langsung.</span></li>
+    <li><b>2. Tulis topik</b><span>Satu kalimat sudah cukup. Topik yang jelas menghasilkan adegan yang lebih tajam.</span></li>
+    <li><b>3. Atur produksi</b><span>Durasi, voiceover, storyboard, subtitle, musik, efek suara, dan format.</span></li>
+    <li><b>4. Salin dan tempel</b><span>Tempel prompt ke Claude. Tinjau storyboard dulu sebelum animasi lengkap dibuat.</span></li>
+  </ol>
+</header>
+
+<h2>Pilih gaya</h2>
+<p class="sub-h">Klik kartu untuk membuka pengaturan prompt di bawah.</p>
+<section class="gallery" id="gallery" aria-label="Daftar gaya visual"></section>
+
+<section class="builder" id="builder" aria-labelledby="bh">
+  <div>
+    <h2 id="bh" style="margin-top:0">Atur prompt: <span id="sname"></span></h2>
+    <dl class="info">
+      <dt>Tampilan</dt><dd id="looks"></dd>
+      <dt>Cocok untuk</dt><dd id="best"></dd>
+      <dt>Perlu diketahui</dt><dd id="know"></dd>
+      <dt>Mesin visual</dt><dd id="engine"></dd>
+    </dl>
+    <div class="field" style="margin-top:22px">
+      <label class="lbl" for="topic">Topik video</label>
+      <textarea id="topic" placeholder="Contoh: Bagaimana sistem pencernaan mengubah makanan menjadi energi"></textarea>
+      <span class="err hidden" id="terr">Tulis topik dulu. Satu kalimat sudah cukup.</span>
+      <div class="row"><button class="btn ghost" id="ex" type="button">Pakai contoh untuk gaya ini</button></div>
+    </div>
+    <div class="field hidden" id="scriptWrap">
+      <label class="lbl" for="script">Naskah voiceover <span class="hint">(opsional)</span></label>
+      <textarea id="script" placeholder="Tempel naskah jika ada, agar animasi bisa disesuaikan dengan ucapan."></textarea>
+    </div>
+  </div>
+
+  <div>
+    <div class="field">
+      <span class="lbl">Durasi (jika tanpa voiceover)</span>
+      <div class="row">
+        <input id="min" type="number" min="0" max="10" value="0" aria-label="Menit"> menit
+        <input id="sec" type="number" min="0" max="59" value="30" aria-label="Detik"> detik
+      </div>
+      <div class="row">
+        <button type="button" class="chip" data-p="15">15 dtk</button>
+        <button type="button" class="chip" data-p="30">30 dtk</button>
+        <button type="button" class="chip" data-p="60">1 mnt</button>
+        <button type="button" class="chip" data-p="120">2 mnt</button>
+      </div>
+      <span class="err hidden" id="derr">Durasi harus antara 5 detik dan 10 menit.</span>
+    </div>
+
+    <div class="field">
+      <span class="lbl">Format</span>
+      <div class="row">
+        <button type="button" class="chip on" data-f="h">Horizontal 16:9</button>
+        <button type="button" class="chip" data-f="v">Vertikal 9:16</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="lbl">Opsi produksi</span>
+      <div class="toggles">
+        <label><input type="checkbox" id="sb" checked><span>Storyboard dulu</span></label>
+        <label><input type="checkbox" id="vo"><span>Voiceover (MP3)</span></label>
+        <label><input type="checkbox" id="sub"><span>Subtitle (SRT)</span></label>
+        <label><input type="checkbox" id="music"><span>Musik latar</span></label>
+        <label><input type="checkbox" id="sfx"><span>Efek suara</span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="lbl" for="out">Prompt siap salin</label>
+      <textarea class="out" id="out" readonly></textarea>
+    </div>
+    <div class="row">
+      <button class="btn" id="copy" type="button">Salin prompt</button>
+      <span class="hint" id="cstat"></span>
+    </div>
+    <p class="hint">Tempel prompt ini ke Claude. Jika voiceover aktif, lampirkan juga file MP3-nya.</p>
+  </div>
+</section>
+
+</div>
+
+<footer class="wrap">
+  Versi Bahasa Indonesia dengan 12 gaya visual. Gaya tambahan: Batik Modern, Sketsa Papan Tulis, Synthwave Neon, dan Origami Lipat.
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const TAU = Math.PI * 2;
+const clamp = x => Math.max(0, Math.min(1, x));
+const eo = x => 1 - Math.pow(1 - clamp(x), 3);
+const eio = x => { x = clamp(x); return x < .5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2; };
+const lp = (a, b, k) => a + (b - a) * k;
+const cyc = (t, d) => (t % d) / d;
+const rnd = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+function fill(c, w, h, col) { c.fillStyle = col; c.fillRect(0, 0, w, h); }
+function rr(c, x, y, w, h, r) {
+  c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+
+/* ---------- pratinjau: satu fungsi gambar per gaya ---------- */
+function kertas(c, w, h, t) {
+  fill(c, w, h, '#EFE5D2');
+  const p = cyc(t, 5), cols = ['#C56B50', '#E8B65C', '#8A9B7C', '#7C9DA5'];
+  const pcs = [[.12,.2,.34,.5],[.52,.14,.36,.36],[.3,.55,.4,.3],[.7,.56,.22,.3]];
+  pcs.forEach((q, i) => {
+    const e = eio(p * 1.6 - i * .18);
+    c.save();
+    c.translate(q[0]*w + (1-e) * (i % 2 ? w*.15 : -w*.15), q[1]*h + (1-e) * h*.2);
+    c.rotate((1-e) * (i % 2 ? .25 : -.25));
+    c.shadowColor = 'rgba(30,36,48,.3)'; c.shadowBlur = 8; c.shadowOffsetY = 4;
+    c.fillStyle = cols[i]; rr(c, 0, 0, q[2]*w, q[3]*h, 10); c.fill();
+    c.restore();
+  });
+}
+function partikel(c, w, h, t) {
+  fill(c, w, h, '#0B1020');
+  const u = cyc(t, 4), ph = u < .5 ? eio(u * 2) : eio((1 - u) * 2);
+  for (let i = 0; i < 260; i++) {
+    const a = rnd(i) * TAU, rad = Math.sqrt(rnd(i + 999));
+    const x1 = w*.3 + Math.cos(a) * rad * h*.28, y1 = h*.5 + Math.sin(a) * rad * h*.28;
+    const k = i % 5, gx = w*.55 + k * w*.08 + rnd(i + 3) * w*.05;
+    const gy = h*.85 - rnd(i + 7) * h * (.3 + .12 * k);
+    c.fillStyle = i % 3 ? 'rgba(68,220,235,.9)' : 'rgba(155,120,255,.9)';
+    c.fillRect(lp(x1, gx, ph), lp(y1, gy, ph), 2, 2);
+  }
+}
+function baseKaca(c, w, h) {
+  fill(c, w, h, '#101827');
+  c.strokeStyle = 'rgba(101,217,211,.25)'; c.lineWidth = 1;
+  for (let x = 0; x < w; x += 28) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); }
+  for (let y = 0; y < h; y += 28) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
+  c.fillStyle = '#E9F1FF';
+  for (let k = 0; k < 6; k++) { rr(c, w*.1, h*(.14 + k*.12), w*(.3 + (k%3)*.12), h*.05, 6); c.fill(); }
+  c.fillStyle = '#65D9D3'; rr(c, w*.6, h*.3, w*.28, h*.4, 14); c.fill();
+}
+function kaca(c, w, h, t) {
+  baseKaca(c, w, h);
+  const cx = w*.5 + Math.cos(t*.9) * w*.22, cy = h*.5 + Math.sin(t*1.3) * h*.18, R = Math.min(w, h) * .22;
+  c.save(); c.beginPath(); c.arc(cx, cy, R, 0, TAU); c.clip();
+  c.translate(cx, cy); c.scale(1.7, 1.7); c.translate(-cx, -cy);
+  baseKaca(c, w, h);
+  c.restore();
+  c.save();
+  c.beginPath(); c.arc(cx, cy, R, 0, TAU); c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 2.5; c.stroke();
+  c.beginPath(); c.arc(cx, cy, R - 6, -2.4, -1.4); c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 4; c.stroke();
+  c.restore();
+}
+function tipografi(c, w, h, t) {
+  fill(c, w, h, '#F6F1E7');
+  const words = ['IDE', 'ALUR', 'HASIL'], col = ['#1E2430', '#E4572E', '#2A9D8F'];
+  const i = Math.floor(t / 1.8) % 3, p = eio((t % 1.8) / 1.2);
+  c.font = `800 ${h*.42}px Fraunces, Georgia, serif`; c.textBaseline = 'middle';
+  c.fillStyle = col[i];
+  c.save(); c.beginPath(); c.rect(0, 0, w*p, h); c.clip();
+  c.fillText(words[i], w*.1, h*.5);
+  c.restore();
+  c.fillStyle = '#1E2430'; c.fillRect(w*.1, h*.82, w*.8*p, 4);
+}
+function isometrik(c, w, h, t) {
+  fill(c, w, h, '#0C1726');
+  const s = Math.min(w, h) * .16, ox = w*.5, oy = h*.52, cs = Math.cos(Math.PI/6), sn = Math.sin(Math.PI/6);
+  const P = (x, y, z) => [ox + (x - y) * cs * s, oy + (x + y) * sn * s - z * s];
+  const V = [[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]];
+  const E = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+  const p = eio((t % 6) / 3), n = Math.floor(p * E.length), frac = p * E.length - n;
+  c.lineWidth = 2.5; c.lineCap = 'round';
+  E.forEach((e, i) => {
+    if (i > n) return;
+    const a = P(...V[e[0]]), b = P(...V[e[1]]), k = i < n ? 1 : frac;
+    c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(lp(a[0], b[0], k), lp(a[1], b[1], k));
+    c.strokeStyle = i % 4 === 0 ? '#38D8D2' : '#A8B8C6'; c.stroke();
+  });
+  const seg = ((t * .6) % 1) * 4, si = Math.floor(seg), sf = seg - si;
+  const pts = [[0,0,1],[1,0,1],[1,1,1],[0,1,1],[0,0,1]], A = pts[si], B = pts[si + 1];
+  const X = P(lp(A[0], B[0], sf), lp(A[1], B[1], sf), 1);
+  c.fillStyle = '#FFAF65'; c.beginPath(); c.arc(X[0], X[1], 5, 0, TAU); c.fill();
+}
+function vektor(c, w, h, t) {
+  fill(c, w, h, '#F6F5EE');
+  const m = (1 - Math.cos(t * 1.3)) / 2, n = lp(2, 9, m), R = Math.min(w, h) * .28;
+  c.beginPath();
+  for (let i = 0; i <= 96; i++) {
+    const a = i / 96 * TAU, cs = Math.cos(a), sn = Math.sin(a);
+    const x = R * Math.sign(cs) * Math.pow(Math.abs(cs), 2/n), y = R * Math.sign(sn) * Math.pow(Math.abs(sn), 2/n);
+    i ? c.lineTo(w*.5 + x, h*.5 + y) : c.moveTo(w*.5 + x, h*.5 + y);
+  }
+  c.closePath(); c.fillStyle = '#16B99A'; c.fill();
+  c.fillStyle = '#4667FF'; c.beginPath(); c.arc(w*.2, h*.25, h*.06 * (1 + m*.3), 0, TAU); c.fill();
+  c.fillStyle = '#FF765E'; c.fillRect(w*.72, h*.7 - m*h*.25, w*.12, h*.25 * (1 + m) * .8);
+}
+function riso(c, w, h, t) {
+  fill(c, w, h, '#F4EBD8');
+  c.globalCompositeOperation = 'multiply';
+  const dx = Math.sin(t * 1.2) * w * .04;
+  c.fillStyle = 'rgba(49,91,201,.92)'; c.beginPath(); c.arc(w*.42 + dx, h*.5, h*.3, 0, TAU); c.fill();
+  c.fillStyle = 'rgba(239,81,70,.9)'; c.beginPath(); c.arc(w*.58 - dx, h*.5, h*.3, 0, TAU); c.fill();
+  c.fillStyle = 'rgba(248,212,109,.9)'; c.fillRect(w*.1, h*.8, w*.8, h*.06);
+  c.globalCompositeOperation = 'source-over';
+  c.fillStyle = 'rgba(32,49,79,.55)';
+  for (let y = 6; y < h*.3; y += 12) for (let x = 6; x < w; x += 12) {
+    if (x > w*.7) { c.beginPath(); c.arc(x, y, 1 + 2*(x/w), 0, TAU); c.fill(); }
+  }
+}
+function pixel(c, w, h, t) {
+  const ps = Math.max(4, Math.round(h / 40)), cols = Math.floor(w / ps), rows = Math.floor(h / ps);
+  const gy = Math.floor(rows * .7) - 1;
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    c.fillStyle = y < rows*.3 ? '#141528' : y < rows*.7 ? '#282B4D' : (y % 2 ? '#433762' : '#4A86D4');
+    c.fillRect(x*ps, y*ps, ps, ps);
+  }
+  const steps = cols - 6, sx = Math.floor((t * 4) % steps) + 1, leg = Math.floor(t * 8) % 2;
+  const px = (x, y, col) => { c.fillStyle = col; c.fillRect((sx + x) * ps, (gy - y) * ps, ps, ps); };
+  [[0,4],[1,4],[0,5],[1,5]].forEach(([x,y]) => px(x, y, '#F5AE69'));
+  [[0,2],[1,2],[0,3],[1,3]].forEach(([x,y]) => px(x, y, '#73D9C9'));
+  [[leg ? 0 : 1, 0],[leg ? 0 : 1, 1]].forEach(([x,y]) => px(x, y, '#F2F0DA'));
+}
+function batik(c, w, h, t) {
+  fill(c, w, h, '#F6EFE0');
+  const s = Math.max(26, h * .2), ang = Math.sin(t * .8) * .35;
+  for (let y = -s; y < h + s; y += s) for (let x = -s; x < w + s; x += s) {
+    const par = (Math.round(x/s) + Math.round(y/s)) % 2 ? 1 : -1;
+    c.save(); c.translate(x + s/2, y + s/2); c.rotate(ang * par);
+    for (let k = 0; k < 4; k++) {
+      c.save(); c.rotate(k * Math.PI / 2);
+      c.fillStyle = '#1F3A5F'; c.beginPath(); c.ellipse(0, -s*.22, s*.13, s*.26, 0, 0, TAU); c.fill();
+      c.restore();
+    }
+    c.fillStyle = '#7A4A2A'; c.beginPath(); c.arc(0, 0, s*.09, 0, TAU); c.fill();
+    c.restore();
+  }
+}
+function sketsa(c, w, h, t) {
+  fill(c, w, h, '#FFFCF5');
+  const p = cyc(t, 7);
+  c.lineWidth = 3; c.lineCap = 'round'; c.lineJoin = 'round'; c.strokeStyle = '#1E2430';
+  const bx = w*.3, by = h*.42, br = h*.22;
+  c.beginPath(); c.arc(bx, by, br, Math.PI*.75, Math.PI*.75 + eio(p * 2.2) * TAU * .92); c.stroke();
+  const pl = eio((p - .35) * 2.5);
+  c.beginPath(); c.moveTo(bx - br*.45, by + br + 10); c.lineTo(lp(bx - br*.45, bx + br*.45, pl), by + br + 10); c.stroke();
+  for (let k = 0; k < 4; k++) {
+    const pk = eio((p - .5 - k*.1) * 3), yy = h * (.25 + k*.16);
+    c.strokeStyle = k === 0 ? '#E4572E' : '#1E2430';
+    c.beginPath(); c.moveTo(w*.6, yy); c.lineTo(lp(w*.6, w*.9, pk), yy); c.stroke();
+  }
+  const pa = eio((p - .8) * 5);
+  c.strokeStyle = '#2A9D8F';
+  c.beginPath(); c.moveTo(w*.46, by); c.lineTo(lp(w*.46, w*.52, pa), by); c.stroke();
+}
+function synth(c, w, h, t) {
+  const hz = h * .55;
+  const g = c.createLinearGradient(0, 0, 0, hz); g.addColorStop(0, '#2B0B3F'); g.addColorStop(1, '#FF5E8A');
+  c.fillStyle = g; c.fillRect(0, 0, w, hz);
+  c.save(); c.beginPath(); c.arc(w*.5, hz, h*.26, Math.PI, 0); c.clip();
+  const sg = c.createLinearGradient(0, hz - h*.26, 0, hz); sg.addColorStop(0, '#FFD166'); sg.addColorStop(1, '#FF5E8A');
+  c.fillStyle = sg; c.fillRect(w*.2, hz - h*.3, w*.6, h*.3);
+  c.fillStyle = '#2B0B3F';
+  for (let i = 0; i < 4; i++) c.fillRect(0, hz - h*.12 + i*h*.04, w, h*.01 + i*h*.005);
+  c.restore();
+  fill(c, w, h, '#120A24'); c.fillStyle = '#120A24'; c.fillRect(0, hz, w, h - hz);
+  c.strokeStyle = '#39F3FF'; c.lineWidth = 1.5; c.shadowColor = '#39F3FF'; c.shadowBlur = 6;
+  for (let i = 0; i < 10; i++) {
+    const z = (i + (t * .8) % 1) / 10, y = hz + (h - hz) * z * z;
+    c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke();
+  }
+  for (let i = -8; i <= 8; i++) { c.beginPath(); c.moveTo(w*.5, hz); c.lineTo(w*.5 + i*w*.25, h); c.stroke(); }
+  c.shadowBlur = 0;
+}
+function origami(c, w, h, t) {
+  fill(c, w, h, '#1B7F79');
+  const n = 7, tw = w / n * 1.1, hh = h * .38;
+  for (let i = 0; i < n; i++) {
+    const sc = Math.cos(Math.sin(t * 1.4 + i * .6) * 1.1);
+    c.save(); c.translate(i * tw * .5 + tw * .1, h * .5); c.scale(sc, 1);
+    c.fillStyle = sc > 0 ? '#FFC65C' : '#F47E74';
+    c.beginPath();
+    if (i % 2) { c.moveTo(0, -hh); c.lineTo(tw, -hh); c.lineTo(tw/2, hh); }
+    else { c.moveTo(0, hh); c.lineTo(tw, hh); c.lineTo(tw/2, -hh); }
+    c.closePath(); c.fill(); c.restore();
+  }
+}
+
+/* ---------- data gaya ---------- */
+const STYLES = [
+  { name:'Kertas Potong', sub:'editorial tangan', engine:'Canvas 2D · tekstur kertas', draw:kertas,
+    teaser:'Kertas berlapis yang meluncur, melipat, dan menyusun diagram.',
+    looks:'Potongan kertas dengan tepi tidak rata, serat kertas, dan bayangan lembut. Bagian-bagiannya menyatu menjadi diagram, dan label ditempatkan di pita kertas.',
+    best:'Penjelasan cara kerja, proses bertahap, dan topik yang ingin terasa hangat serta ramah.',
+    know:'Setiap adegan padat detail kertas. Sebaiknya gunakan storyboard dulu agar tampilannya bisa diperiksa sebelum animasi dibuat.',
+    ex:'Jelaskan bagaimana tanaman mengubah cahaya matahari, air, dan karbon dioksida menjadi energi, serta mengapa proses ini penting bagi makhluk hidup lain.',
+    brief:'Gaya kolase kertas buatan tangan dengan lapisan krem, terakota, mustard, sage, dan biru abu. Setiap bagian punya tepi tidak rata, bayangan lembut, dan bergerak dengan sedikit gerakan stop-motion.' },
+  { name:'Partikel Generatif', sub:'tech sinematik', engine:'Point cloud · shader', draw:partikel,
+    teaser:'Ribuan titik cahaya membentuk objek, kata, dan diagram.',
+    looks:'Latar navy gelap. Partikel berkumpul menjadi bentuk, mengalir di antara bagian diagram, lalu terurai dan menyusun ulang untuk ide berikutnya. Label tetap tajam.',
+    best:'Perbandingan produk, peluncuran aplikasi, dan topik AI serta perangkat lunak.',
+    know:'Jika topik menyebut produk nyata, Claude diminta memakai logo resminya. Jika logo tidak bisa diambil, akan disediakan tombol unggah, bukan gambar palsu.',
+    ex:'Bandingkan dua aplikasi pengelola keuangan pribadi: fitur utama, cara mencatat pengeluaran, dan pertimbangan memilih yang sesuai kebutuhan.',
+    brief:'Latar navy gelap. Partikel cyan dan violet berkumpul menjadi bentuk, mengalir di antara bagian diagram, lalu menyusun ulang untuk ide berikutnya. Label dibuat tajam dan mudah dibaca.' },
+  { name:'Kaca Cair', sub:'produk premium', engine:'Shader refraksi WebGL', draw:kaca,
+    teaser:'Lensa kaca yang bergerak dan membelokkan apa pun di belakangnya.',
+    looks:'Bentuk kaca transparan bergerak di atas antarmuka gelap. Lensa memperbesar dan membelokkan isi di bawahnya, menyatu dan berpisah, dengan kilau di tepinya.',
+    best:'Walkthrough aplikasi, alur SaaS, dan apa pun yang memiliki antarmuka untuk ditunjukkan.',
+    know:'Ini gaya paling berat untuk dirender. Ekspor di Chrome pada komputer yang cukup cepat agar MP4 berjalan lancar.',
+    ex:'Tunjukkan alur pembuatan formulir pendaftaran online: dari desain, pengisian data, validasi, sampai data tersimpan dan notifikasi terkirim.',
+    brief:'Kaca transparan yang membelokkan latar bergaris dan kartu antarmuka. Gunakan pantulan tepi, dispersi warna tipis, serta kaca yang menyatu dan berpisah. Teks tetap tajam di atas kaca.' },
+  { name:'Tipografi Kinetik', sub:'tipografi adalah gambarnya', engine:'Canvas 2D · mesin teks', draw:tipografi,
+    teaser:'Kata besar, reveal bertopeng, dan teks yang berubah menjadi penjelasan.',
+    looks:'Kata-kata besar terpotong di tepi bingkai. Baris muncul lewat topeng, lalu tersusun ulang menjadi daftar, perbandingan, atau diagram.',
+    best:'Tips, kerangka kerja, perbandingan sebelum dan sesudah, serta hook konten.',
+    know:'Kata-kata membawa ceritanya. Batasi topik pada satu ide utama dan jaga narasi tetap ringkas agar teks di layar mudah dibaca.',
+    ex:'Jelaskan mengapa prompt yang samar sering menghasilkan jawaban generik, dan bagaimana memperbaikinya dengan tujuan, konteks, batasan, serta contoh.',
+    brief:'Tipografi besar yang terpotong di tepi bingkai. Kata muncul lewat topeng lalu tersusun ulang menjadi daftar, perbandingan, atau diagram. Palet tinta gelap, off-white, dan dua aksen cerah.' },
+  { name:'Garis Isometrik', sub:'gambar teknik', engine:'Ortografik · geometri garis', draw:isometrik,
+    teaser:'Gambar garis presisi yang menggambar dirinya sendiri lalu mulai bekerja.',
+    looks:'Bangunan, mesin, dan rute isometrik menggambar diri garis demi garis di atas kanvas gelap. Lalu bagian-bagiannya bergerak: paket berjalan di jalurnya dan kendaraan melaju.',
+    best:'Sistem, pipeline, logistik, arsitektur, dan apa pun yang memiliki alur fisik.',
+    know:'Topik abstrak tetap bisa, tetapi Claude akan mengubahnya menjadi struktur dan jalur. Semakin fisik prosesnya, semakin bagus hasilnya.',
+    ex:'Jelaskan perjalanan pesanan online dari checkout sampai diterima: pembayaran disetujui, stok dialokasikan, barang dikemas, dikirim kurir, dan status pelacakan diperbarui.',
+    brief:'Ilustrasi isometrik di latar gelap. Garis menggambar dirinya sendiri, lalu bagian-bagian bergerak. Paket atau kendaraan berjalan di sepanjang jalur. Garis tipis untuk detail dan garis tebal untuk siluet.' },
+  { name:'Vektor Datar', sub:'studio 2D bersih', engine:'Path SVG · morphing bentuk', draw:vektor,
+    teaser:'Ilustrasi 2D tegas, dengan bentuk yang berubah dari satu ide ke ide berikutnya.',
+    looks:'Warna solid, bentuk tegas, dan morph yang halus. Objek punya potongan detail, kabel atau panah menunjukkan aliran, dan callout bernomor memandu langkah demi langkah.',
+    best:'Sains, energi, kesehatan, dan topik sehari-hari yang menjelaskan cara kerja sesuatu.',
+    know:'Ini pilihan paling aman untuk hampir semua topik. Jika belum yakin gaya apa yang cocok, mulai dari sini.',
+    ex:'Jelaskan bagaimana panel surya mengubah cahaya matahari menjadi listrik untuk rumah, termasuk peran inverter dan baterai.',
+    brief:'Warna solid, bentuk tegas, dan morph halus antarbentuk. Potongan detail di dalam objek, kabel dan panah yang menunjukkan aliran, serta callout bernomor untuk langkah-langkah.' },
+  { name:'Cetak Risograf', sub:'poster tinta spot', engine:'Multiply · pola halftone', draw:riso,
+    teaser:'Dua sampai empat tinta spot yang bertumpuk di atas kertas krem.',
+    looks:'Bentuk-bentuk tinta biru, merah, dan kuning bertumpuk seperti poster cetak. Ada offset registrasi kecil dan titik-titik halftone di sudut.',
+    best:'Konten edukasi dengan karakter poster, komunitas, kampanye, dan topik budaya.',
+    know:'Efek cetak dibangun dari lapisan tinta terpisah, bukan filter grain. Hasilnya lebih kaya, tetapi rendering-nya lebih berat.',
+    ex:'Ceritakan sejarah singkat batik sebagai teknik pewarnaan rintang, dari proses pembuatannya sampai tantangan pelestariannya hari ini.',
+    brief:'Kertas krem dengan tinta biru kobalt, vermilion, dan kuning. Setiap pelat tinta punya offset registrasi kecil dan pola halftone sendiri. Tinta yang bertumpuk membentuk warna gelap.' },
+  { name:'Pixel Art 8-bit', sub:'game retro', engine:'Canvas 2D · grid piksel', draw:pixel,
+    teaser:'Adegan piksel yang detail, sprite animasi, dan transisi bertema blok.',
+    looks:'Lanskap piksel dengan sprite yang berjalan melewati tiap tahap penjelasan. Transisi memakai blok yang menyusun dan membongkar adegan.',
+    best:'Edukasi yang ramah anak muda, konten bertema gim, sejarah, dan proses bertahap.',
+    know:'Piksel dipakai untuk menjelaskan, bukan hanya dekorasi. Hindari HUD atau skor palsu jika topiknya tidak berkaitan dengan gim.',
+    ex:'Jelaskan siklus air di alam: penguapan, kondensasi, presipitasi, dan infiltrasi, dengan sprite yang melewati setiap tahap.',
+    brief:'Piksel digambar dengan sengaja pada grid resolusi rendah dengan palet terbatas. Sprite bergerak dengan pose kunci dan timing yang jelas. Transisi memakai blok piksel.' },
+  { name:'Batik Modern', sub:'motif Nusantara', engine:'Canvas 2D · pola geometris', draw:batik, isNew:true,
+    teaser:'Motif batik yang berputar pelan, lalu terurai menjadi diagram.',
+    looks:'Latar krem dengan motif geometris indigo dan soga. Motif berputar perlahan dan saling bertumpuk, lalu membuka ruang untuk diagram proses.',
+    best:'Budaya, seni, sejarah Indonesia, pariwisata, dan konten UMKM kreatif.',
+    know:'Gunakan motif sebagai bingkai atau transisi, bukan dekorasi acak. Pastikan makna motif sesuai dengan konteks topik.',
+    ex:'Jelaskan proses membuat batik tulis dari pola, pemberian malam, pewarnaan, hingga pelorodan, dan mengapa setiap tahap membutuhkan waktu.',
+    brief:'Latar krem dengan motif geometris indigo dan soga yang berputar pelan dan saling bertumpuk. Diagram proses muncul dari pola, lalu motif kembali sebagai penutup.' },
+  { name:'Sketsa Papan Tulis', sub:'catatan tangan', engine:'Canvas 2D · goresan spidol', draw:sketsa, isNew:true,
+    teaser:'Goresan spidol yang menulis dan menggambar seperti catatan kelas.',
+    looks:'Kertas putih gading dengan goresan hitam dan satu warna aksen yang ditarik dari kiri ke kanan. Ikon sederhana seperti bola lampu dan panah menunjukkan ide.',
+    best:'Materi kelas, ringkasan buku, cara belajar, dan konten edukasi yang ringan.',
+    know:'Sangat cocok untuk durasi pendek dengan banyak poin. Teks dibuat sebagai goresan tangan, bukan dengan font.',
+    ex:'Rangkum prinsip belajar aktif, yaitu latihan mengingat kembali, jarak antar sesi belajar, dan umpan balik, lengkap dengan contoh penerapannya di kelas.',
+    brief:'Latar kertas putih gading dengan goresan hitam dan satu warna aksen. Goresan ditarik dari kiri ke kanan. Ikon sederhana seperti bola lampu, panah, dan tanda centang menunjukkan ide.' },
+  { name:'Synthwave Neon', sub:'retro malam', engine:'Canvas 2D · grid perspektif', draw:synth, isNew:true,
+    teaser:'Matahari senja, grid neon yang melaju, dan judul yang bercahaya.',
+    looks:'Gradien langit ungu ke merah muda, matahari bergaris, dan grid cyan dengan perspektif yang terus bergerak ke arah penonton.',
+    best:'Konten teknologi, musik, peluncuran produk, dan topik gaya hidup malam.',
+    know:'Glow dan warna terang harus dijaga agar teks tetap terbaca. Gunakan secukupnya dan batasi aksen warna.',
+    ex:'Bandingkan dua jenis baterai kendaraan listrik dari sisi kepadatan energi, umur pakai, dan biaya, dengan grafik yang bergerak.',
+    brief:'Gradien langit ungu ke merah muda, matahari bergaris, dan grid cyan dengan perspektif yang bergerak. Glow lembut pada garis dan teks, dengan warna dibatasi pada tiga aksen.' },
+  { name:'Origami Lipat', sub:'lipatan kertas', engine:'Canvas 2D · transformasi skala', draw:origami, isNew:true,
+    teaser:'Bidang segitiga yang melipat dan membuka, langkah demi langkah.',
+    looks:'Latar teal dengan segitiga kuning dan oranye yang melipat secara bergelombang. Setiap lipatan menandai tahap baru dalam proses.',
+    best:'Panduan langkah, perbandingan, cerita proses, dan konten edukatif untuk anak-anak.',
+    know:'Cocok untuk urutan langkah. Pastikan setiap lipatan punya makna, misalnya perpindahan dari satu tahap ke tahap berikutnya.',
+    ex:'Jelaskan langkah menanam bibit sayur di pot: menyiapkan media, menanam, menyiram, dan memantau pertumbuhan pada minggu pertama.',
+    brief:'Latar teal dengan segitiga kuning dan oranye yang melipat secara bergelombang. Setiap lipatan menandai tahap baru, dan label ditempatkan di bidang yang sedang terbuka.' }
+];
+
+/* ---------- galeri ---------- */
+const gal = $('gallery');
+STYLES.forEach((s, i) => {
+  gal.insertAdjacentHTML('beforeend', `
+    <article class="card" data-i="${i}" tabindex="0" role="button" aria-label="Pilih gaya ${s.name}">
+      <canvas aria-hidden="true"></canvas>
+      <div class="card-head">
+        <div><h3>${s.name}${s.isNew ? '<span class="new">BARU</span>' : ''}</h3><div class="tag">${s.sub}</div></div>
+        <span class="num">${i + 1}</span>
+      </div>
+      <p>${s.teaser}</p>
+      <span class="btn ghost" style="align-self:flex-start">Atur prompt →</span>
+    </article>`);
+});
+const cards = [...gal.querySelectorAll('canvas')].map((cv, i) => ({ cv, ctx: cv.getContext('2d'), draw: STYLES[i].draw, i }));
+const dpr = Math.min(2, window.devicePixelRatio || 1);
+function paint(t) {
+  cards.forEach(({ cv, ctx, draw, i }) => {
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (!w) return;
+    const W = Math.round(w * dpr), H = Math.round(h * dpr);
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw(ctx, w, h, t + i * .9);
+  });
+}
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const t0 = performance.now();
+function loop(now) { paint((now - t0) / 1000); requestAnimationFrame(loop); }
+if (reduce) paint(2); else requestAnimationFrame(loop);
+
+/* ---------- pembuat prompt ---------- */
+const S = { idx: 0, topic: '', min: 0, sec: 30, vo: false, sb: true, sub: false, music: false, sfx: false, vert: false, script: '' };
+const fmtDur = sec => { const m = Math.floor(sec / 60), s = sec % 60; return [m ? m + ' menit' : '', s ? s + ' detik' : ''].filter(Boolean).join(' ') || '0 detik'; };
+const clampN = (v, a, b) => Math.max(a, Math.min(b, Math.floor(+v || 0)));
+
+function buildPrompt() {
+  const s = STYLES[S.idx], vo = S.vo, tot = S.min * 60 + S.sec;
+  const topic = S.topic.trim() || '[isi topik di sini]';
+  const script = S.script.trim().replace(/\s+/g, ' ').replace(/"/g, "'");
+  const dur = vo ? 'Mengikuti durasi file voiceover yang dilampirkan' : fmtDur(tot);
+  return `# TUGAS
+Buat video motion graphics dengan gaya **${s.name}** sebagai Artifact HTML interaktif di percakapan ini, lalu sediakan hasilnya sebagai video MP4 yang bisa diunduh.
+
+## 1. Konfigurasi proyek (satu-satunya sumber pengaturan)
+- Topik: ${topic}
+- Storyboard: ${S.sb ? 'Aktif' : 'Nonaktif'}
+- Voiceover: ${vo ? 'Aktif, file MP3 dilampirkan' : 'Nonaktif'}
+- Naskah voiceover: ${vo && script ? '"' + script + '"' : '(tidak ada)'}
+- Subtitle: ${vo && S.sub ? 'Aktif, buat SRT dan tampilkan di layar' : 'Nonaktif'}
+- Durasi: ${dur}
+- Format: ${S.vert ? 'Vertikal 9:16 (1080 × 1920)' : 'Horizontal 16:9 (1920 × 1080)'}
+- Frame rate ekspor: 30 fps
+- Efek suara: ${S.sfx ? 'Aktif' : 'Nonaktif'}
+- Musik latar: ${S.music ? 'Aktif' : 'Nonaktif'}
+- Format file akhir: MP4
+
+## 2. Karakter gaya
+${s.brief}
+
+## 3. Alur kerja
+${S.sb
+  ? '- Tahap 1: buat tabel adegan (waktu, informasi yang diajarkan, komposisi, gerakan, transisi, teks di layar, dan suara), lalu buat pratinjau visual yang benar-benar dirender dengan JavaScript. Berhenti dan tunggu jawaban "APPROVED" sebelum membuat animasi lengkap.'
+  : '- Storyboard dilewati. Langsung buat animasi lengkap tanpa menunggu persetujuan.'}
+- Setiap adegan harus mengajarkan sesuatu yang spesifik dan berguna tentang topik. Hindari sekadar menampilkan judul atau kata kunci.
+- Jangan mengarang statistik, angka, spesifikasi, atau klaim. Jika data diperlukan, gunakan sumber terpercaya atau tandai sebagai ilustrasi.
+- Jika topik menyebut merek atau produk nyata, gunakan logo resmi dan jangan menggambar ulang logo dari ingatan. Jika logo tidak bisa diambil, sediakan tombol unggah.
+- ${vo ? 'Gunakan durasi audio voiceover sebagai acuan waktu utama. Jangan memotong atau mempercepat audio.' : 'Gunakan durasi yang ditentukan di atas. Jangan membuat narasi suara.'}
+- Semua yang terlihat harus berada di dalam canvas yang direkam, bukan di overlay HTML yang hilang saat ekspor.
+
+## 4. Pemutar
+Tombol putar dan jeda, ulang, timeline yang bisa digeser, waktu saat ini dan total, serta tombol Unduh Video.${vo ? ' Tambahkan tombol unggah MP3 jika file tidak bisa diakses.' : ''}${vo && S.sub ? ' Sediakan unduhan SRT.' : ''}
+
+## 5. Ekspor
+Rekam canvas beserta semua audio yang aktif. Pastikan file benar-benar berformat MP4 (H.264 dan AAC jika didukung). Jika browser atau Artifact membatasi, jelaskan kendalanya secara singkat dan sediakan versi HTML mandiri. Jangan pernah mengganti nama file WebM menjadi .mp4.
+
+Mulai dari Tahap 1 sekarang.`;
+}
+
+function selectStyle(i, scroll) {
+  S.idx = i;
+  const s = STYLES[i];
+  $('sname').textContent = s.name;
+  $('looks').textContent = s.looks;
+  $('best').textContent = s.best;
+  $('know').textContent = s.know;
+  $('engine').textContent = s.engine;
+  document.querySelectorAll('.card').forEach((el, k) => el.classList.toggle('on', k === i));
+  update();
+  if (scroll !== false) $('builder').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function update() {
+  const tot = S.min * 60 + S.sec;
+  $('scriptWrap').classList.toggle('hidden', !S.vo);
+  $('sub').disabled = !S.vo;
+  $('derr').classList.toggle('hidden', S.vo || (tot >= 5 && tot <= 600));
+  document.querySelectorAll('[data-p]').forEach(b => b.classList.toggle('on', +b.dataset.p === tot));
+  document.querySelectorAll('[data-f]').forEach(b => b.classList.toggle('on', (b.dataset.f === 'v') === S.vert));
+  if (document.activeElement !== $('min')) $('min').value = S.min;
+  if (document.activeElement !== $('sec')) $('sec').value = S.sec;
+  $('out').value = buildPrompt();
+}
+
+async function copyPrompt() {
+  const tot = S.min * 60 + S.sec;
+  if (!S.topic.trim()) { $('terr').classList.remove('hidden'); $('topic').focus(); return; }
+  if (!S.vo && (tot < 5 || tot > 600)) { $('derr').classList.remove('hidden'); $('min').focus(); return; }
+  const text = buildPrompt();
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; }
+  catch (e) {
+    const ta = $('out'); ta.removeAttribute('readonly'); ta.focus(); ta.select();
+    try { ok = document.execCommand('copy'); } catch (_) {}
+    ta.setAttribute('readonly', '');
+  }
+  const b = $('copy');
+  b.textContent = ok ? 'Tersalin ✓' : 'Gagal, salin manual';
+  b.classList.toggle('ok', ok);
+  $('cstat').textContent = ok ? '' : 'Pilih teks di kotak lalu tekan Ctrl+C.';
+  setTimeout(() => { b.textContent = 'Salin prompt'; b.classList.remove('ok'); }, 1800);
+}
+
+gal.addEventListener('click', e => { const c = e.target.closest('.card'); if (c) selectStyle(+c.dataset.i); });
+gal.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('card')) { e.preventDefault(); selectStyle(+e.target.dataset.i); }
+});
+$('topic').addEventListener('input', e => { S.topic = e.target.value; if (S.topic.trim()) $('terr').classList.add('hidden'); update(); });
+$('script').addEventListener('input', e => { S.script = e.target.value; update(); });
+$('min').addEventListener('input', e => { S.min = clampN(e.target.value, 0, 10); update(); });
+$('sec').addEventListener('input', e => { S.sec = clampN(e.target.value, 0, 59); update(); });
+[['sb', 'sb'], ['vo', 'vo'], ['sub', 'sub'], ['music', 'music'], ['sfx', 'sfx']].forEach(([id, k]) =>
+  $(id).addEventListener('change', e => { S[k] = e.target.checked; update(); }));
+document.querySelectorAll('[data-f]').forEach(b => b.addEventListener('click', () => { S.vert = b.dataset.f === 'v'; update(); }));
+document.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => { const v = +b.dataset.p; S.min = Math.floor(v / 60); S.sec = v % 60; update(); }));
+$('ex').addEventListener('click', () => { const s = STYLES[S.idx]; S.topic = s.ex; $('topic').value = s.ex; $('terr').classList.add('hidden'); update(); });
+$('copy').addEventListener('click', copyPrompt);
+
+selectStyle(0, false);
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"dc035d1dafe443d792cebe7e471273f7","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
