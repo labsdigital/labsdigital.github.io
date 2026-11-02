@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gabung PDF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,800;1,9..144,500&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f1ebdd; --paper-2:#e8e0cd; --sheet:#fffdf7; --ink:#16130e; --ink-2:#5b5446;
+    --red:#e8431d; --red-d:#c2330f; --line:#16130e; --ok:#1f7a4d;
+    --serif:'Fraunces',Georgia,serif; --mono:'DM Mono',ui-monospace,Consolas,monospace; --sans:'Instrument Sans',system-ui,sans-serif;
+    --shadow:4px 4px 0 var(--ink);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--paper:#17140f; --paper-2:#211d15; --sheet:#262116; --ink:#f3ecdb; --ink-2:#a79f8b; --line:#f3ecdb; --red:#ff5a30; --red-d:#ff7650; --ok:#4cc58a; --shadow:4px 4px 0 var(--red);}
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.5 var(--sans);background:var(--paper);position:relative;overflow-x:hidden}
+  /* grain + grid */
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:radial-gradient(var(--ink-2) .6px,transparent .7px);background-size:22px 22px;opacity:.18}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.07;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  main{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:28px 20px 80px}
+
+  /* header */
+  .top{display:flex;justify-content:space-between;align-items:center;font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;border-bottom:2px solid var(--line);padding-bottom:10px}
+  .top .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--red);margin-right:8px;animation:pulse 2s infinite}
+  @keyframes pulse{50%{opacity:.25}}
+  .hero{padding:44px 0 30px;position:relative}
+  h1{font:800 clamp(52px,12vw,104px)/.9 var(--serif);letter-spacing:-.035em;margin:0;font-variation-settings:"opsz" 144}
+  h1 em{font-style:italic;font-weight:500;color:var(--red)}
+  .hero p{max-width:440px;color:var(--ink-2);margin:18px 0 0}
+  .sheets{position:absolute;right:0;top:34px;width:150px;height:150px;pointer-events:none}
+  .sheets i{position:absolute;inset:0;background:var(--sheet);border:2px solid var(--line);box-shadow:var(--shadow)}
+  .sheets i:nth-child(1){transform:rotate(-9deg) translate(-14px,6px);background:var(--paper-2)}
+  .sheets i:nth-child(2){transform:rotate(5deg) translate(10px,-4px)}
+  .sheets i:nth-child(3){transform:rotate(-1deg);display:grid;place-items:center;font:800 40px var(--serif);color:var(--red)}
+  .sheets i:nth-child(3)::before{content:"PDF"; letter-spacing:-.02em}
+  .sheets i:nth-child(3)::after{content:"";position:absolute;left:18px;right:18px;bottom:20px;height:6px;background:repeating-linear-gradient(90deg,var(--ink) 0 14px,transparent 14px 20px);opacity:.7}
+  @media(max-width:600px){.sheets{display:none}}
+
+  /* drop */
+  .drop{display:block;position:relative;border:2px dashed var(--line);background:var(--sheet);padding:34px 20px;text-align:center;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s}
+  .drop:hover,.drop.over{transform:translate(-3px,-3px);box-shadow:7px 7px 0 var(--red);border-style:solid}
+  .drop.over{background:color-mix(in srgb,var(--red) 10%,var(--sheet))}
+  .drop b{font:800 26px/1.1 var(--serif);display:block;letter-spacing:-.01em}
+  .drop b u{text-decoration-color:var(--red);text-decoration-thickness:3px;text-underline-offset:4px}
+  .drop span{display:block;font:400 12px var(--mono);color:var(--ink-2);margin-top:8px;text-transform:uppercase;letter-spacing:.08em}
+  .plus{display:inline-grid;place-items:center;width:44px;height:44px;border:2px solid var(--line);border-radius:50%;font:500 26px/1 var(--mono);margin-bottom:12px;background:var(--red);color:#fff;transition:transform .3s}
+  .drop:hover .plus,.drop.over .plus{transform:rotate(90deg) scale(1.1)}
+
+  /* list */
+  .bar{display:flex;justify-content:space-between;align-items:baseline;margin:40px 0 14px;gap:12px;flex-wrap:wrap}
+  .bar h2{font:800 28px var(--serif);margin:0;letter-spacing:-.02em}
+  .bar h2 small{font:400 12px var(--mono);color:var(--ink-2);letter-spacing:.06em;text-transform:uppercase;margin-left:10px}
+  .link{background:none;border:none;font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+  .link:hover{color:var(--red)}
+  ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;counter-reset:n}
+  li{display:flex;align-items:center;gap:14px;background:var(--sheet);border:2px solid var(--line);padding:12px 14px 12px 10px;box-shadow:var(--shadow);animation:in .35s cubic-bezier(.2,.9,.3,1.2) both;transition:transform .15s,box-shadow .15s}
+  li:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+  @keyframes in{from{opacity:0;transform:translateY(14px) rotate(-1.2deg)}}
+  li.dragging{opacity:.35;transform:rotate(1.5deg)}
+  li.target{outline:3px solid var(--red);outline-offset:3px}
+  .handle{cursor:grab;color:var(--ink-2);user-select:none;font:500 16px var(--mono);letter-spacing:-3px;padding:6px 4px}
+  .handle:active{cursor:grabbing}
+  .num{flex:none;width:42px;text-align:center;font:800 30px/1 var(--serif);color:var(--red);font-style:italic}
+  .info{flex:1;min-width:0}
+  .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .meta{display:flex;gap:8px;align-items:center;margin-top:4px;font:400 12px var(--mono);color:var(--ink-2)}
+  .tag{border:1.5px solid var(--line);padding:0 7px;color:var(--ink);background:var(--paper-2)}
+  .tag.err{background:var(--red);color:#fff;border-color:var(--red)}
+  .acts{display:flex;gap:6px}
+  .icon{width:34px;height:34px;display:grid;place-items:center;background:transparent;border:2px solid var(--line);color:var(--ink);font:500 15px var(--mono);cursor:pointer;transition:.12s}
+  .icon:hover:not(:disabled){background:var(--ink);color:var(--paper)}
+  .icon.del:hover:not(:disabled){background:var(--red);border-color:var(--red);color:#fff}
+  .icon:disabled{opacity:.25;cursor:not-allowed}
+  .hint{margin-top:14px;font:400 12px var(--mono);color:var(--ink-2)}
+
+  /* merge */
+  .primary{width:100%;margin-top:28px;padding:20px;border:2px solid var(--line);background:var(--red);color:#fff;font:800 24px var(--serif);letter-spacing:-.01em;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s;display:flex;justify-content:center;align-items:center;gap:12px}
+  .primary:hover:not(:disabled){transform:translate(-3px,-3px);box-shadow:8px 8px 0 var(--ink);background:var(--red-d)}
+  .primary:active:not(:disabled){transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+  .primary:disabled{background:var(--paper-2);color:var(--ink-2);cursor:not-allowed;box-shadow:none;border-style:dashed}
+  .primary .arr{font-family:var(--mono);transition:transform .2s}
+  .primary:hover:not(:disabled) .arr{transform:translateX(6px)}
+  .primary.busy .arr{animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .status{margin-top:16px;font:500 13px var(--mono);min-height:20px;text-align:center}
+  .status.err{color:var(--red)} .status.ok{color:var(--ok)}
+  .stamp{display:none;margin:22px auto 0;width:max-content;border:3px solid var(--ok);color:var(--ok);padding:6px 18px;font:800 26px var(--serif);text-transform:uppercase;letter-spacing:.06em;transform:rotate(-4deg)}
+  .stamp.show{display:block;animation:stamp .5s cubic-bezier(.2,1.6,.4,1) both}
+  @keyframes stamp{from{opacity:0;transform:rotate(-14deg) scale(2.4)}}
+  .hidden{display:none!important}
+  .foot{margin-top:56px;padding-top:12px;border-top:2px solid var(--line);font:400 11px var(--mono);color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .rise{animation:rise .7s cubic-bezier(.2,.8,.2,1) both}
+  .rise.d1{animation-delay:.08s}.rise.d2{animation-delay:.16s}.rise.d3{animation-delay:.24s}
+  @keyframes rise{from{opacity:0;transform:translateY(22px)}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media(max-width:520px){.num{width:30px;font-size:24px}.handle{display:none}.icon{width:30px;height:30px}li{gap:10px}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top rise"><span><i class="dot"></i>Gabung PDF</span><span>100% di browser</span></div>
+
+  <header class="hero">
+    <div class="sheets rise d3" aria-hidden="true"><i></i><i></i><i></i></div>
+    <h1 class="rise">Satukan<br>semua <em>PDF</em>.</h1>
+    <p class="rise d1">Masukkan beberapa file, atur urutannya, lalu unduh sebagai satu dokumen. Tanpa unggah, tanpa akun.</p>
+  </header>
+
+  <label class="drop rise d2" id="drop">
+    <input type="file" id="input" accept="application/pdf,.pdf" multiple hidden>
+    <div class="plus">+</div>
+    <b>Pilih file, atau <u>seret ke sini</u></b>
+    <span>PDF · bisa banyak sekaligus</span>
+  </label>
+
+  <section id="listWrap" class="hidden">
+    <div class="bar">
+      <h2>Urutan gabungan<small id="summary"></small></h2>
+      <button class="link" id="clear">Hapus semua</button>
+    </div>
+    <ul id="list"></ul>
+    <p class="hint">↳ Seret ⋮⋮ atau pakai ↑ ↓ untuk mengatur. File paling atas jadi halaman pertama.</p>
+  </section>
+
+  <button class="primary hidden" id="merge"><span id="mergeLabel">Gabungkan &amp; Unduh</span><span class="arr">→</span></button>
+  <div class="status" id="status" role="status"></div>
+  <div class="stamp" id="stamp">Selesai ✓</div>
+
+  <footer class="foot"><span>File tidak pernah meninggalkan perangkat Anda</span><span>Dibuat dengan pdf-lib</span></footer>
+</main>
+
+<script src="pdf-lib.min.js"></script>
+<script>
+const { PDFDocument } = PDFLib;
+const $ = id => document.getElementById(id);
+let files = [];
+let uid = 0, dragId = null;
+
+const fmtSize = b => b > 1048576 ? (b/1048576).toFixed(1)+' MB' : Math.max(1,Math.round(b/1024))+' KB';
+function setStatus(msg, cls=''){ const s=$('status'); s.textContent=msg; s.className='status '+cls; if(!cls||cls==='err') $('stamp').classList.remove('show'); }
+const esc = s => s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function addFiles(fileList){
+  const pdfs = [...fileList].filter(f => f.type==='application/pdf' || /\.pdf$/i.test(f.name));
+  if(pdfs.length < fileList.length) setStatus('File non-PDF diabaikan.', 'err'); else setStatus('');
+  for(const file of pdfs){
+    const item = {id:++uid, file, pages:null, error:null, fresh:true};
+    files.push(item);
+    render();
+    try{
+      const doc = await PDFDocument.load(await file.arrayBuffer());
+      item.pages = doc.getPageCount();
+    }catch(e){
+      item.error = /encrypt/i.test(e.message) ? 'terkunci' : 'tidak terbaca';
+    }
+    render();
+  }
+}
+
+function move(from, to){
+  if(to<0 || to>=files.length || from===to) return;
+  files.forEach(f=>f.fresh=false);
+  files.splice(to,0,files.splice(from,1)[0]);
+  render();
+}
+
+function render(){
+  const list = $('list'); list.innerHTML='';
+  files.forEach((it,i)=>{
+    const li = document.createElement('li');
+    li.draggable = true; li.dataset.id = it.id;
+    if(!it.fresh) li.style.animation='none';
+    const meta = it.error ? `<span class="tag err">${it.error}</span><span>dilewati</span>`
+      : it.pages==null ? `<span>membaca…</span>`
+      : `<span class="tag">${it.pages} hlm</span><span>${fmtSize(it.file.size)}</span>`;
+    li.innerHTML = `<span class="handle" title="Seret">⋮⋮</span><span class="num">${i+1}</span>
+      <div class="info"><div class="name">${esc(it.file.name)}</div><div class="meta">${meta}</div></div>
+      <div class="acts">
+        <button class="icon up" title="Naik" ${i===0?'disabled':''}>↑</button>
+        <button class="icon down" title="Turun" ${i===files.length-1?'disabled':''}>↓</button>
+        <button class="icon del" title="Hapus">✕</button>
+      </div>`;
+    li.querySelector('.up').onclick = ()=>move(i,i-1);
+    li.querySelector('.down').onclick = ()=>move(i,i+1);
+    li.querySelector('.del').onclick = ()=>{ files.forEach(f=>f.fresh=false); files.splice(i,1); render(); };
+    li.ondragstart = e=>{ dragId=it.id; setTimeout(()=>li.classList.add('dragging')); e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',''); };
+    li.ondragend = ()=>{ dragId=null; document.querySelectorAll('li').forEach(l=>l.classList.remove('dragging','target')); };
+    li.ondragover = e=>{ if(dragId==null) return; e.preventDefault(); li.classList.add('target'); };
+    li.ondragleave = ()=>li.classList.remove('target');
+    li.ondrop = e=>{
+      if(dragId==null) return; e.preventDefault(); e.stopPropagation();
+      move(files.findIndex(f=>f.id===dragId), i);
+    };
+    list.appendChild(li);
+  });
+  const valid = files.filter(f=>!f.error && f.pages!=null);
+  const total = valid.reduce((n,f)=>n+f.pages,0);
+  $('listWrap').classList.toggle('hidden', !files.length);
+  $('merge').classList.toggle('hidden', !files.length);
+  $('summary').textContent = `${valid.length} file · ${total} halaman`;
+  const busy = $('merge').classList.contains('busy');
+  $('merge').disabled = busy || valid.length < 2 || files.some(f=>f.pages==null && !f.error);
+  $('mergeLabel').textContent = valid.length<2 && files.length ? 'Tambah minimal 2 file' : 'Gabungkan & Unduh';
+}
+
+$('input').onchange = e=>{ addFiles(e.target.files); e.target.value=''; };
+const drop = $('drop');
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{ if(dragId!=null) return; e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.remove('over')));
+drop.addEventListener('drop',e=>{ if(dragId!=null) return; e.preventDefault(); addFiles(e.dataTransfer.files); });
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>{ if(dragId==null) e.preventDefault(); });
+
+$('clear').onclick = ()=>{ files=[]; setStatus(''); render(); };
+
+$('merge').onclick = async ()=>{
+  const btn = $('merge'); btn.classList.add('busy'); btn.disabled = true;
+  $('mergeLabel').textContent = 'Menggabungkan…'; $('stamp').classList.remove('show'); setStatus('');
+  try{
+    const out = await PDFDocument.create();
+    for(const it of files){
+      if(it.error) continue;
+      const src = await PDFDocument.load(await it.file.arrayBuffer());
+      const pages = await out.copyPages(src, src.getPageIndices());
+      pages.forEach(p=>out.addPage(p));
+    }
+    const bytes = await out.save();
+    const url = URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+    const a = document.createElement('a'); a.href=url; a.download='gabungan.pdf'; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    setStatus(`gabungan.pdf · ${out.getPageCount()} halaman · ${fmtSize(bytes.length)}`, 'ok');
+    $('stamp').classList.add('show');
+  }catch(e){
+    setStatus('Gagal menggabungkan: '+e.message, 'err');
+  }
+  btn.classList.remove('busy');
+  render();
+};
+render();
+</script>
+</body>
+</html>
