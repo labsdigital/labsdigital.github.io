@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>3DS - Modern 3D Modeling Studio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Plus Jakarta Sans & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Three.js & Addons (r128) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/STLExporter.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/OBJExporter.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #090d16;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #f8fafc;
+        }
+        .font-mono-code {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            outline: none;
+        }
+        /* Scrollbar halus */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        /* 3DS Studio Surface Panel */
+        .glass-dock {
+            background: rgba(13, 18, 30, 0.86);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(52, 211, 153, 0.16);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+        /* Shape & Tool Card Buttons */
+        .shape-btn, .tool-btn {
+            background: rgba(22, 30, 46, 0.85);
+            color: #cbd5e1;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 12px;
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .shape-btn:hover, .tool-btn:hover:not(:disabled) {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(52, 211, 153, 0.5);
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px -4px rgba(16, 185, 129, 0.25);
+        }
+        .shape-btn:active, .tool-btn:active:not(:disabled) {
+            transform: translateY(0) scale(0.96);
+        }
+        .tool-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .tool-btn.dimension-active {
+            color: #fbbf24;
+        }
+        .tool-btn.dimension-on {
+            color: #fde68a;
+            background: rgba(245, 158, 11, 0.22);
+            border-color: rgba(251, 191, 36, 0.6);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+        /* Left Vertical Rail Tabs */
+        .bottom-tab {
+            background: rgba(22, 30, 46, 0.6);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 14px;
+            transition: all 0.2s ease;
+        }
+        .bottom-tab:hover {
+            color: #f1f5f9;
+            background: rgba(30, 41, 59, 0.9);
+            border-color: rgba(52, 211, 153, 0.3);
+        }
+        .bottom-tab.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #052e16;
+            border-color: #34d399;
+            box-shadow: 0 6px 20px -3px rgba(16, 185, 129, 0.5);
+        }
+        /* Transform Mode Pills */
+        .transform-btn {
+            background: rgba(22, 30, 46, 0.7);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            transition: all 0.18s ease;
+        }
+        .transform-btn:hover {
+            color: #ffffff;
+            background: rgba(30, 41, 59, 0.95);
+        }
+        .transform-btn.active {
+            color: #042f2e;
+            font-weight: 700;
+            background: linear-gradient(135deg, #2dd4bf 0%, #38bdf8 100%);
+            border-color: rgba(45, 212, 191, 0.6);
+            box-shadow: 0 0 18px rgba(45, 212, 191, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Viewport Container -->
+    <div id="canvas-container"></div>
+
+    <!-- 3D Floating Dimension Labels Overlay -->
+    <div id="dimension-overlay" class="fixed inset-0 pointer-events-none z-10 hidden">
+        <div id="dim-label-w" class="absolute bg-slate-950/90 border border-emerald-400/70 text-emerald-300 text-[11px] font-mono-code font-semibold px-2.5 py-0.5 rounded-md shadow-lg -translate-x-1/2 -translate-y-1/2">W: 2.00</div>
+        <div id="dim-label-h" class="absolute bg-slate-950/90 border border-emerald-400/70 text-emerald-300 text-[11px] font-mono-code font-semibold px-2.5 py-0.5 rounded-md shadow-lg -translate-x-1/2 -translate-y-1/2">H: 2.00</div>
+        <div id="dim-label-d" class="absolute bg-slate-950/90 border border-emerald-400/70 text-emerald-300 text-[11px] font-mono-code font-semibold px-2.5 py-0.5 rounded-md shadow-lg -translate-x-1/2 -translate-y-1/2">D: 2.00</div>
+    </div>
+
+    <!-- TOP HEADER BAR: 3DS STUDIO IDENTITY & GLOBAL TOOLBAR -->
+    <header class="fixed top-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
+        <!-- Left: 3DS Brand & File Menu + History -->
+        <div class="flex items-center gap-2 pointer-events-auto">
+            <button id="btn-menu" class="glass-dock flex items-center gap-3 pl-2.5 pr-4 py-2 rounded-2xl hover:border-emerald-400/60 active:scale-95 transition group" title="Workspace & File Menu">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                    <!-- Custom 3DSTri-Axis Emblem Icon -->
+                    <svg class="w-5 h-5 text-slate-950" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v9m0 0l7.5 4.5M12 12L4.5 16.5"/>
+                        <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+                        <circle cx="12" cy="3" r="1.5" fill="currentColor"/>
+                        <circle cx="19.5" cy="16.5" r="1.5" fill="currentColor"/>
+                        <circle cx="4.5" cy="16.5" r="1.5" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="text-left">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-base font-extrabold tracking-tight text-white">3DS</span>
+                        <span class="text-[9px] uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-1.5 py-0.2 rounded font-bold">CAD</span>
+                    </div>
+                    <span class="block text-[10px] text-slate-400 group-hover:text-emerald-300 transition">Berkas & Ekspor ▾</span>
+                </div>
+            </button>
+
+            <!-- History & Scene Tree Trigger -->
+            <div class="glass-dock flex items-center rounded-2xl p-1.5 gap-1">
+                <button id="btn-undo" class="p-2 rounded-xl hover:bg-white/10 text-slate-300 hover:text-emerald-300 disabled:opacity-30 transition" title="Undo (Ctrl+Z)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 14L4 9l5-5"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 9h10.5a5.5 5.5 0 015.5 5.5v0a5.5 5.5 0 01-5.5 5.5H11"/>
+                    </svg>
+                </button>
+                <button id="btn-redo" class="p-2 rounded-xl hover:bg-white/10 text-slate-300 hover:text-emerald-300 disabled:opacity-30 transition" title="Redo (Ctrl+Y)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 14l5-5-5-5"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 9H9.5A5.5 5.5 0 004 14.5v0A5.5 5.5 0 009.5 20H13"/>
+                    </svg>
+                </button>
+                <div class="h-5 w-[1px] bg-slate-700/80 mx-1"></div>
+                <button id="btn-outliner-toggle" class="px-3 py-1.5 rounded-xl hover:bg-white/10 text-xs font-semibold text-slate-200 flex items-center gap-2 transition" title="Hierarki Objek Scene">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="7" height="6" rx="1.5"/>
+                        <rect x="14" y="4" width="7" height="6" rx="1.5"/>
+                        <rect x="8.5" y="14" width="7" height="6" rx="1.5"/>
+                        <path stroke-linecap="round" d="M6.5 10v2a2 2 0 002 2h7a2 2 0 002-2v-2"/>
+                    </svg>
+                    <span class="hidden sm:inline">Objek</span>
+                    <span id="object-count-badge" class="bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-mono-code px-1.5 py-0.2 rounded">2</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Center: Transform Gizmo Selector & Coordinates Inspector -->
+        <div class="flex items-center gap-2 pointer-events-auto">
+            <!-- Transform Gizmo Modes in Top Center Ribbon (Distinct from 3DC.io) -->
+            <div class="glass-dock p-1.5 rounded-2xl flex items-center gap-1">
+                <button id="mode-translate" class="transform-btn active px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs" title="Geser Objek (W)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="2"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2v5m0 10v5M2 12h5m10 0h5"/>
+                    </svg>
+                    <span class="hidden md:inline">Posisi</span>
+                </button>
+                <button id="mode-scale" class="transform-btn px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs" title="Skala Ukuran (E)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/>
+                        <rect x="9" y="9" width="6" height="6" rx="1"/>
+                    </svg>
+                    <span class="hidden md:inline">Ukuran</span>
+                </button>
+                <button id="mode-rotate" class="transform-btn px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs" title="Putar Orbit (R)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-3-6.7M21 3v5h-5"/>
+                    </svg>
+                    <span class="hidden md:inline">Putar</span>
+                </button>
+            </div>
+
+            <!-- Coordinate Inspector -->
+            <div id="inspector-bar" class="hidden xl:flex items-center gap-2.5 glass-dock px-3.5 py-2 rounded-2xl text-xs">
+                <span id="selected-obj-name" class="font-bold text-emerald-300 max-w-[95px] truncate">Cube</span>
+                <div class="h-4 w-[1px] bg-slate-700"></div>
+                <div class="flex items-center gap-1.5 font-mono-code">
+                    <label class="flex items-center gap-1 text-rose-400 font-semibold">X
+                        <input id="inp-x" type="number" step="0.2" class="w-14 bg-slate-900/90 border border-slate-700 rounded-lg px-1.5 py-1 text-white text-center focus:outline-none focus:border-emerald-400">
+                    </label>
+                    <label class="flex items-center gap-1 text-emerald-400 font-semibold">Y
+                        <input id="inp-y" type="number" step="0.2" class="w-14 bg-slate-900/90 border border-slate-700 rounded-lg px-1.5 py-1 text-white text-center focus:outline-none focus:border-emerald-400">
+                    </label>
+                    <label class="flex items-center gap-1 text-sky-400 font-semibold">Z
+                        <input id="inp-z" type="number" step="0.2" class="w-14 bg-slate-900/90 border border-slate-700 rounded-lg px-1.5 py-1 text-white text-center focus:outline-none focus:border-emerald-400">
+                    </label>
+                </div>
+                <div class="h-4 w-[1px] bg-slate-700"></div>
+                <label class="flex items-center gap-1.5 text-slate-300 cursor-pointer font-medium">
+                    <input id="chk-snap" type="checkbox" class="rounded bg-slate-800 border-slate-600 text-emerald-500">
+                    <span>Snap</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Right: Camera & Capture Actions -->
+        <div class="flex items-center gap-2 pointer-events-auto">
+            <button id="btn-reset-cam" class="glass-dock flex items-center gap-2 px-3 py-2.5 rounded-2xl hover:border-emerald-400/50 active:scale-95 transition text-xs font-semibold text-slate-200" title="Reset Kamera">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <span class="hidden sm:inline">Kamera</span>
+            </button>
+            <button id="btn-screenshot" class="glass-dock flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500/30 to-teal-500/30 hover:from-emerald-500/50 hover:to-teal-500/50 border-emerald-400/40 active:scale-95 transition text-xs font-bold text-white" title="Tangkap Render PNG">
+                <svg class="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3.5"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2m8-16h2a2 2 0 012 2v2m-4 12h2a2 2 0 002-2v-2"/>
+                </svg>
+                <span>Render PNG</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Outliner Drawer (Scene Hierarchy) -->
+    <div id="outliner-panel" class="fixed top-20 left-3 z-30 w-64 glass-dock rounded-2xl hidden overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-700/70 flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-300">Scene Tree 3DS</span>
+            <button id="btn-close-outliner" class="text-slate-400 hover:text-white">✕</button>
+        </div>
+        <div id="outliner-list" class="max-h-64 overflow-y-auto space-y-1 p-2"></div>
+    </div>
+
+    <!-- LEFT VERTICAL STUDIO DOCK (Berbeda total dari 3DC.io yang ada di kiri bawah) -->
+    <aside class="fixed top-1/2 -translate-y-1/2 left-3 z-20 flex items-center gap-3 select-none">
+
+        <!-- Vertical Command Rail (3DS Primary Switcher) -->
+        <div class="glass-dock rounded-2xl p-2 flex flex-col gap-2 w-[68px]">
+            <button id="tab-add" class="bottom-tab active flex flex-col items-center justify-center gap-1 py-3 px-1">
+                <!-- Ikon Atom/Mesh 3D Baru -->
+                <svg class="w-5 h-5 stroke-current" fill="none" stroke-width="2.1" viewBox="0 0 24 24">
+                    <polygon points="12 2 19 21 12 17 5 21 12 2"/>
+                </svg>
+                <span class="text-[10px] font-extrabold tracking-tight">Mesh</span>
+            </button>
+            <button id="tab-color" class="bottom-tab flex flex-col items-center justify-center gap-1 py-3 px-1">
+                <!-- Indikator Warna Dinamis sesuai objek terpilih -->
+                <div id="color-tab-icon" class="w-5 h-5 rounded-full border-2 border-white/90 overflow-hidden flex shadow-md transition-colors duration-150" style="background-color: #38bdf8;"></div>
+                <span class="text-[10px] font-extrabold tracking-tight">Material</span>
+            </button>
+            <button id="tab-tools" class="bottom-tab flex flex-col items-center justify-center gap-1 py-3 px-1">
+                <!-- Ikon Boolean/CAD Operations Baru -->
+                <svg class="w-5 h-5 stroke-current" fill="none" stroke-width="2.1" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+                </svg>
+                <span class="text-[10px] font-extrabold tracking-tight">CAD Ops</span>
+            </button>
+        </div>
+
+        <!-- SUB-PANEL 1: MESH & GENERATOR LIBRARY (Desain 2 Kolom Horizontal List/Grid Modern) -->
+        <div id="panel-add" class="glass-dock rounded-2xl p-3.5 w-[260px] sm:w-[290px]">
+            <div class="flex items-center justify-between mb-2.5 px-1">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-300">Komponen 3DS</span>
+                <span class="text-[10px] bg-emerald-500/15 text-emerald-300 px-2 py-0.5 rounded-full font-semibold">12 Mesh</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <button data-shape="cube" class="shape-btn flex flex-col items-center justify-center h-[62px] p-1">
+                    <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <rect x="4" y="4" width="16" height="16" rx="2"/>
+                        <path d="M9 9h6v6H9z" fill="currentColor" fill-opacity="0.25"/>
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-1">Kubus</span>
+                </button>
+                <button data-shape="sphere" class="shape-btn flex flex-col items-center justify-center h-[62px] p-1">
+                    <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9"/>
+                        <path d="M3.6 9h16.8M3.6 15h16.8"/>
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-1">Bola</span>
+                </button>
+                <button data-shape="cylinder" class="shape-btn flex flex-col items-center justify-center h-[62px] p-1">
+                    <svg class="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <rect x="6" y="4" width="12" height="16" rx="4"/>
+                        <line x1="6" y1="8" x2="18" y2="8"/>
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-1">Tabung</span>
+                </button>
+
+                <button data-shape="cone" class="shape-btn flex flex-col items-center justify-center h-[62px] p-1">
+                    <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3L4 19h16L12 3z"/>
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-1">Kerucut</span>
+                </button>
+                <button data-shape="pyramid" class="shape-btn flex flex-col items-center justify-center h-[62px] p-1">
+                    <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L3 17l9 5 9-5-9-15z"/>
+                        <path stroke-linecap="round" d="M12 2v20"/>
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-1">Piramida</span>
+                </button>
+                <button data-shape="torus" class="shape-btn flex flex-col items-center justify-center h-[62px] p-1">
+                    <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="8"/>
+                        <circle cx="12" cy="12" r="3.5"/>
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-1">Cincin</span>
+                </button>
+
+                <button data-shape="triprism" class="shape-btn flex flex-col items-center justify-center h-[62px] p-1">
+                    <svg class="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 19h16L12 5 4 19z"/>
+                        <path stroke-linecap="round" d="M8 12h8"/>
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-1">Atap</span>
+                </button>
+                <button data-shape="prism" class="shape-btn flex flex-col items-center justify-center h-[62px] p-1">
+                    <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <polygon points="12 2 21 7 21 17 12 22 3 17 3 7 12 2"/>
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-1">Heksagon</span>
+                </button>
+                <button data-shape="plane" class="shape-btn flex flex-col items-center justify-center h-[62px] p-1">
+                    <svg class="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <rect x="3" y="8" width="18" height="8" rx="1.5"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-1">Pelat</span>
+                </button>
+
+                <button id="btn-open-draw" class="shape-btn flex flex-col items-center justify-center h-[62px] p-1">
+                    <svg class="w-6 h-6 text-fuchsia-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-1">Sketsa 2D</span>
+                </button>
+                <button id="btn-open-text" class="shape-btn flex flex-col items-center justify-center h-[62px] p-1">
+                    <svg class="w-6 h-6 text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M12 6v13m-4 0h8"/>
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-1">Teks 3D</span>
+                </button>
+                <button id="btn-import-trigger" class="shape-btn flex flex-col items-center justify-center h-[62px] p-1">
+                    <svg class="w-6 h-6 text-lime-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="text-[10px] font-semibold mt-1">Impor CAD</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- SUB-PANEL 2: SURFACE & MATERIAL STUDIO -->
+        <div id="panel-color" class="hidden glass-dock rounded-2xl p-4 w-[260px] sm:w-[290px]">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-300">Material & Warna</span>
+                <input id="custom-color-picker" type="color" value="#38bdf8" class="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0">
+            </div>
+            <!-- Swatches Grid -->
+            <div id="color-swatches" class="grid grid-cols-6 gap-2 mb-3.5"></div>
+            <!-- Material Sliders -->
+            <div class="space-y-2.5 pt-3 border-t border-slate-700/80 text-xs">
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-300">Kekasaran</span>
+                    <input id="mat-roughness" type="range" min="0" max="1" step="0.05" value="0.45" class="w-28 accent-emerald-500">
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-300">Logam (Metal)</span>
+                    <input id="mat-metalness" type="range" min="0" max="1" step="0.05" value="0.1" class="w-28 accent-emerald-500">
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-300">Transparansi</span>
+                    <input id="mat-opacity" type="range" min="0.15" max="1" step="0.05" value="1" class="w-28 accent-emerald-500">
+                </div>
+                <label class="flex items-center justify-between pt-1 cursor-pointer">
+                    <span class="text-slate-300">Mode Rangka (Wire)</span>
+                    <input id="mat-wireframe" type="checkbox" class="rounded text-emerald-500">
+                </label>
+            </div>
+        </div>
+
+        <!-- SUB-PANEL 3: CAD & BOOLEAN OPERATIONS (Susunan & Ikon Baru Khas 3DS) -->
+        <div id="panel-tools" class="hidden glass-dock rounded-2xl p-3.5 w-[260px] sm:w-[290px] select-none">
+            <div class="flex items-center justify-between mb-2.5 px-1">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-300">Modifikasi CAD</span>
+                <span class="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full font-semibold">Boolean</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <!-- Boolean Subtract -->
+                <button id="tool-subtract" class="tool-btn flex items-center gap-2.5 px-3 py-2.5">
+                    <svg class="w-5 h-5 text-rose-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="9" cy="9" r="6"/>
+                        <circle cx="15" cy="15" r="6" stroke-dasharray="2.5 2"/>
+                    </svg>
+                    <div class="text-left">
+                        <div class="text-xs font-bold leading-tight">Subtract</div>
+                        <div class="text-[9px] text-slate-400">Potong Objek</div>
+                    </div>
+                </button>
+                <!-- Group / Merge -->
+                <button id="tool-group" class="tool-btn flex items-center gap-2.5 px-3 py-2.5" disabled title="Pilih minimal 2 objek (Shift+Klik)">
+                    <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h8v8H8z"/>
+                        <path stroke-linecap="round" d="M4 12h4m8 0h4M12 4v4m0 8v4"/>
+                    </svg>
+                    <div class="text-left">
+                        <div class="text-xs font-bold leading-tight">Gabung</div>
+                        <div class="text-[9px] text-slate-400">Union Mesh</div>
+                    </div>
+                </button>
+
+                <!-- Clone / Duplicate -->
+                <button id="tool-clone" class="tool-btn flex items-center gap-2.5 px-3 py-2.5">
+                    <svg class="w-5 h-5 text-cyan-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="9" y="9" width="11" height="11" rx="2"/>
+                        <path stroke-linecap="round" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                    </svg>
+                    <div class="text-left">
+                        <div class="text-xs font-bold leading-tight">Duplikat</div>
+                        <div class="text-[9px] text-slate-400">Salin Objek</div>
+                    </div>
+                </button>
+                <!-- Dimension Ruler -->
+                <button id="tool-dimension" class="tool-btn dimension-active flex items-center gap-2.5 px-3 py-2.5">
+                    <svg class="w-5 h-5 stroke-current shrink-0" fill="none" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3-3 15 15-3 3L3 6z"/>
+                        <path stroke-linecap="round" d="M8 5l2 2m3 1l2 2m3 1l2 2"/>
+                    </svg>
+                    <div class="text-left">
+                        <div class="text-xs font-bold leading-tight">Dimensi</div>
+                        <div class="text-[9px] text-slate-400">Ukur X/Y/Z</div>
+                    </div>
+                </button>
+
+                <!-- Undo -->
+                <button id="tool-undo" class="tool-btn flex items-center gap-2.5 px-3 py-2.5" disabled>
+                    <svg class="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 14L4 9l5-5M4 9h11a5 5 0 010 10h-3"/>
+                    </svg>
+                    <span class="text-xs font-bold">Undo</span>
+                </button>
+                <!-- Redo -->
+                <button id="tool-redo" class="tool-btn flex items-center gap-2.5 px-3 py-2.5" disabled>
+                    <svg class="w-5 h-5 text-slate-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 14l5-5-5-5M20 9H9a5 5 0 000 10h3"/>
+                    </svg>
+                    <span class="text-xs font-bold">Redo</span>
+                </button>
+
+                <!-- Deselect -->
+                <button id="tool-deselect" class="tool-btn flex items-center gap-2.5 px-3 py-2.5">
+                    <svg class="w-5 h-5 text-indigo-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>
+                        <path stroke-linecap="round" d="M9 9l6 6m0-6l-6 6"/>
+                    </svg>
+                    <span class="text-xs font-bold">Lepas</span>
+                </button>
+                <!-- Delete -->
+                <button id="tool-delete" class="tool-btn flex items-center gap-2.5 px-3 py-2.5">
+                    <svg class="w-5 h-5 text-red-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 7h12M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-7 4v6m4-6v6M8 7l1 12a2 2 0 002 2h2a2 2 0 002-2l1-12"/>
+                    </svg>
+                    <span class="text-xs font-bold">Hapus</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Bottom Right Status Badge (Identitas 3DS) -->
+    <div class="fixed bottom-3 right-3 z-20 pointer-events-none hidden sm:flex items-center gap-2 glass-dock px-3.5 py-1.5 rounded-full text-[11px] text-slate-400">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="font-bold text-slate-200">3DS Engine</span>
+        <span>•</span>
+        <span>Klik + Shift untuk Multi-Objek</span>
+    </div>
+
+    <!-- MODAL 1: MENU PROYEK 3DS -->
+    <div id="modal-menu" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-dock rounded-3xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-700/80">
+                <h2 class="text-lg font-extrabold text-white flex items-center gap-2.5">
+                    <span class="w-3.5 h-3.5 rounded-md bg-gradient-to-tr from-indigo-500 to-cyan-400"></span>
+                    Workspace 3DS Studio
+                </h2>
+                <button id="btn-close-menu" class="text-slate-400 hover:text-white p-1">✕</button>
+            </div>
+
+            <div class="mt-4 space-y-3.5 text-sm">
+                <p class="text-xs text-indigo-300 uppercase font-bold tracking-wider">Starter Scene 3DS</p>
+                <div class="grid grid-cols-3 gap-2.5">
+                    <button id="preset-default" class="bg-slate-800/70 hover:bg-indigo-600/25 border border-slate-700 hover:border-indigo-400/50 rounded-2xl p-3 text-center transition">
+                        <div class="text-lg mb-1">✨</div>
+                        <div class="text-xs font-semibold">Starter 3DS</div>
+                    </button>
+                    <button id="preset-robot" class="bg-slate-800/70 hover:bg-indigo-600/25 border border-slate-700 hover:border-indigo-400/50 rounded-2xl p-3 text-center transition">
+                        <div class="text-lg mb-1">🤖</div>
+                        <div class="text-xs font-semibold">Cyber Bot</div>
+                    </button>
+                    <button id="preset-house" class="bg-slate-800/70 hover:bg-indigo-600/25 border border-slate-700 hover:border-indigo-400/50 rounded-2xl p-3 text-center transition">
+                        <div class="text-lg mb-1">🏡</div>
+                        <div class="text-xs font-semibold">Vila 3D</div>
+                    </button>
+                </div>
+
+                <p class="text-xs text-indigo-300 uppercase font-bold tracking-wider pt-2">Ekspor Produksi (3D Print & Engine)</p>
+                <div class="grid grid-cols-3 gap-2.5">
+                    <button id="btn-export-stl" class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 text-xs">
+                        <span>Ekspor .STL</span>
+                    </button>
+                    <button id="btn-export-obj" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 text-xs">
+                        <span>Ekspor .OBJ</span>
+                    </button>
+                    <button id="btn-export-glb" class="bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 text-xs">
+                        <span>Ekspor .GLB</span>
+                    </button>
+                </div>
+
+                <p class="text-xs text-indigo-300 uppercase font-bold tracking-wider pt-2">Berkas Proyek</p>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button id="btn-save-json" class="bg-slate-800 hover:bg-slate-700 border border-slate-600/50 text-white py-2.5 px-3 rounded-xl transition text-xs font-semibold">
+                        Simpan Berkas (.JSON)
+                    </button>
+                    <button id="btn-clear-scene" class="bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 py-2.5 px-3 rounded-xl transition text-xs font-semibold">
+                        Kosongkan Kanvas
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: DRAW 2D SKETCH TO 3D EXTRUDE -->
+    <div id="modal-draw" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-[#1e1e1e] border border-white/15 rounded-2xl max-w-md w-full p-5 shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                <div>
+                    <h3 class="text-base font-bold text-white">Gambar Sketsa 2D ke Objek 3D</h3>
+                    <p class="text-xs text-gray-400">Gambar siluet tertutup di bawah untuk diubah menjadi bentuk 3D</p>
+                </div>
+                <button id="btn-close-draw" class="text-gray-400 hover:text-white p-1">✕</button>
+            </div>
+            <div class="my-3 flex flex-col items-center">
+                <canvas id="sketch-canvas" width="320" height="240" class="bg-white rounded-xl cursor-crosshair border-2 border-blue-500 touch-none"></canvas>
+                <div class="w-full flex items-center justify-between mt-3 text-xs">
+                    <label class="flex items-center gap-2 text-gray-300">
+                        <span>Ketebalan 3D:</span>
+                        <input id="extrude-depth" type="range" min="0.4" max="4" step="0.2" value="1.2" class="w-28 accent-blue-500">
+                    </label>
+                    <button id="btn-clear-sketch" class="text-gray-400 hover:text-white underline">Hapus Kanvas</button>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-white/10">
+                <button id="btn-create-extrude" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2 rounded-xl text-sm transition">
+                    Buat Objek 3D
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: 3D TEXT GENERATOR -->
+    <div id="modal-text" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-[#1e1e1e] border border-white/15 rounded-2xl max-w-sm w-full p-5 shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                <h3 class="text-base font-bold text-white">Buat Teks 3D Emboss</h3>
+                <button id="btn-close-text" class="text-gray-400 hover:text-white p-1">✕</button>
+            </div>
+            <div class="my-4 space-y-3">
+                <label class="block text-xs text-gray-300">
+                    Ketik Teks (Maks 12 Karakter):
+                    <input id="inp-3d-text" type="text" maxlength="12" value="3DS PRO" class="mt-1.5 w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white font-bold tracking-wider focus:outline-none focus:border-indigo-400">
+                </label>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button id="btn-Generate-text" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 py-2 rounded-xl text-sm transition">
+                    Tambahkan ke Scene
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden File Input for Importing STL / OBJ / JSON -->
+    <input id="file-import-input" type="file" accept=".stl,.obj,.json" class="hidden">
+
+    <!-- Toast Notification -->
+    <div id="toast-msg" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-indigo-600/95 border border-indigo-400/40 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl pointer-events-none opacity-0 transition-opacity duration-200">
+        Objek ditambahkan
+    </div>
+
+    <script>
+        // ============================================================================
+        // VARIABEL GLOBAL & STATE APLIKASI 3DS (3D STUDIO)
+        // ============================================================================
+        let scene, camera, renderer, orbitControls, transformControls;
+        let selectionBoxHelper;
+        const objects = []; // Daftar mesh 3D yang dibuat pengguna
+        let selectedObject = null;
+        let multiSelectedObjects = []; // Mendukung multi-seleksi untuk Merge / Subtract
+        let showDimensions = false;
+        let currentColor = '#38bdf8';
+        let shapeCounter = 1;
+
+        // Undo / Redo History Stack
+        const historyStack = [];
+        let historyIndex = -1;
+        let isRestoringHistory = false;
+
+        // Palet warna modern khas 3DS
+        const PALETTE_COLORS = [
+            '#38bdf8', '#a855f7', '#10b981', '#f59e0b', '#f43f5e', '#6366f1',
+            '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#3b82f6', '#14b8a6',
+            '#f8fafc', '#cbd5e1', '#64748b', '#1e293b', '#78350f', '#facc15'
+        ];
+
+        // ============================================================================
+        // INISIALISASI SCENE THREE.JS
+        // ============================================================================
+        function initThreeScene() {
+            const container = document.getElementById('canvas-container');
+
+            // 1. Scene dengan nuansa Deep Obsidian Studio khas 3DS
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x090d16);
+
+            // 2. Camera
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(11, 8, 14);
+            camera.lookAt(0, 1, 0);
+
+            // 3. Renderer (preserveDrawingBuffer diperlukan untuk fitur Screenshot)
+            renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // 4. Lighting Setup
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+            scene.add(ambientLight);
+
+            const mainDirLight = new THREE.DirectionalLight(0xffffff, 0.75);
+            mainDirLight.position.set(18, 28, 20);
+            mainDirLight.castShadow = true;
+            mainDirLight.shadow.mapSize.width = 2048;
+            mainDirLight.shadow.mapSize.height = 2048;
+            mainDirLight.shadow.camera.near = 0.5;
+            mainDirLight.shadow.camera.far = 80;
+            const d = 25;
+            mainDirLight.shadow.camera.left = -d;
+            mainDirLight.shadow.camera.right = d;
+            mainDirLight.shadow.camera.top = d;
+            mainDirLight.shadow.camera.bottom = -d;
+            scene.add(mainDirLight);
+
+            const backLight = new THREE.DirectionalLight(0x818cf8, 0.35);
+            backLight.position.set(-15, 10, -15);
+            scene.add(backLight);
+
+            // 5. Emerald-Teal CAD Studio Floor Grid khas 3DS
+            const gridHelper = new THREE.GridHelper(60, 60, 0x10b981, 0x1e293b);
+            gridHelper.position.y = 0;
+            gridHelper.name = 'FloorGrid';
+            scene.add(gridHelper);
+
+            // Shadow Catcher Floor Plane
+            const shadowFloorGeo = new THREE.PlaneGeometry(60, 60);
+            const shadowFloorMat = new THREE.ShadowMaterial({ opacity: 0.25 });
+            const shadowFloor = new THREE.Mesh(shadowFloorGeo, shadowFloorMat);
+            shadowFloor.rotation.x = -Math.PI / 2;
+            shadowFloor.receiveShadow = true;
+            shadowFloor.name = 'ShadowFloor';
+            scene.add(shadowFloor);
+
+            // 6. OrbitControls
+            orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+            orbitControls.enableDamping = true;
+            orbitControls.dampingFactor = 0.08;
+            orbitControls.maxPolarAngle = Math.PI / 2 + 0.15;
+            orbitControls.target.set(0, 1, 0);
+
+            // 7. TransformControls (Gizmo 3D)
+            transformControls = new THREE.TransformControls(camera, renderer.domElement);
+            transformControls.setSize(1.1);
+            transformControls.addEventListener('dragging-changed', (event) => {
+                orbitControls.enabled = !event.value;
+                if (!event.value) {
+                    saveHistoryState();
+                }
+            });
+            transformControls.addEventListener('change', () => {
+                if (selectedObject) {
+                    if (selectionBoxHelper) selectionBoxHelper.update();
+                    updateInspectorUI();
+                }
+            });
+            scene.add(transformControls);
+
+            // 8. Selection Box Outline
+            selectionBoxHelper = new THREE.BoxHelper(new THREE.Mesh(), 0x60a5fa);
+            selectionBoxHelper.visible = false;
+            scene.add(selectionBoxHelper);
+
+            // 9. Buat Scene Awal (Kubus Biru & Silinder Pink persis seperti gambar contoh)
+            createDefault3DCScene();
+
+            // 10. Event Raycasting untuk memilih objek di kanvas
+            setupCanvasPointerSelection();
+
+            // 11. Resize Handler
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // ============================================================================
+        // PEMBUATAN OBJEK 3D (PRIMITIVES & CUSTOM)
+        // ============================================================================
+        function createDefault3DCScene() {
+            clearAllObjects(false);
+
+            // Objek Starter 3DS: Kubus Biru & Silinder Merah
+            const blueCube = createPrimitiveMesh('cube', '#3b82f6');
+            blueCube.position.set(-1.3, 1.0, 1.2);
+            registerObject(blueCube, '3DS Box');
+
+            const redCylinder = createPrimitiveMesh('cylinder', '#ef4444');
+            redCylinder.position.set(1.5, 1.1, -0.6);
+            registerObject(redCylinder, '3DS Cylinder');
+
+            selectObject(blueCube);
+            saveHistoryState();
+        }
+
+        function createPrimitiveMesh(type, colorHex = currentColor) {
+            let geometry;
+            switch (type) {
+                case 'cube':
+                    geometry = new THREE.BoxGeometry(2, 2, 2);
+                    break;
+                case 'sphere':
+                    geometry = new THREE.SphereGeometry(1.15, 32, 24);
+                    break;
+                case 'cylinder':
+                    geometry = new THREE.CylinderGeometry(1, 1, 2.2, 32);
+                    break;
+                case 'cone':
+                    geometry = new THREE.ConeGeometry(1.15, 2.3, 32);
+                    break;
+                case 'pyramid':
+                    geometry = new THREE.ConeGeometry(1.35, 2.2, 4);
+                    geometry.rotateY(Math.PI / 4);
+                    break;
+                case 'torus':
+                    geometry = new THREE.TorusGeometry(1.05, 0.38, 20, 48);
+                    geometry.rotateX(Math.PI / 2);
+                    break;
+                case 'triprism':
+                    geometry = new THREE.CylinderGeometry(1.2, 1.2, 2.0, 3);
+                    break;
+                case 'prism':
+                    geometry = new THREE.CylinderGeometry(1.15, 1.15, 2.1, 6);
+                    break;
+                case 'plane':
+                    geometry = new THREE.BoxGeometry(3.2, 0.12, 3.2);
+                    break;
+                default:
+                    geometry = new THREE.BoxGeometry(2, 2, 2);
+            }
+
+            const material = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(colorHex),
+                roughness: 0.42,
+                metalness: 0.08,
+                transparent: false,
+                opacity: 1.0
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.userData.shapeType = type;
+            return mesh;
+        }
+
+        function addShapeToScene(type) {
+            const mesh = createPrimitiveMesh(type, currentColor);
+
+            // Hitung tinggi objek agar duduk rapi di atas lantai (Y = 0)
+            mesh.geometry.computeBoundingBox();
+            const bbox = mesh.geometry.boundingBox;
+            const height = (bbox.max.y - bbox.min.y);
+
+            // Jika ada objek terpilih, letakkan sedikit di sebelahnya agar tidak bertumpuk persis
+            let offsetX = (Math.random() - 0.5) * 1.6;
+            let offsetZ = (Math.random() - 0.5) * 1.6;
+            if (objects.length === 0) {
+                offsetX = 0;
+                offsetZ = 0;
+            }
+
+            mesh.position.set(offsetX, height / 2, offsetZ);
+            const label = type.charAt(0).toUpperCase() + type.slice(1) + ' ' + (shapeCounter++);
+            registerObject(mesh, label);
+            selectObject(mesh);
+            saveHistoryState();
+            showToast(`${label} ditambahkan`);
+        }
+
+        function registerObject(mesh, name) {
+            mesh.name = name || `Object ${shapeCounter++}`;
+            scene.add(mesh);
+            objects.push(mesh);
+            updateOutlinerUI();
+        }
+
+        // ============================================================================
+        // SELEKSI OBJEK, IKON COLOR DINAMIS & INSPECTOR UI
+        // ============================================================================
+        function updateColorTabIcon() {
+            const iconEl = document.getElementById('color-tab-icon');
+            if (!iconEl) return;
+
+            if (multiSelectedObjects.length > 1) {
+                // Jika beberapa objek dipilih, tampilkan split warna dari objek-objek tersebut
+                iconEl.style.backgroundColor = 'transparent';
+                iconEl.innerHTML = '';
+                const sliceWidth = 100 / multiSelectedObjects.length;
+                multiSelectedObjects.forEach((obj) => {
+                    const hex = obj.material && obj.material.color ? '#' + obj.material.color.getHexString() : currentColor;
+                    const div = document.createElement('div');
+                    div.style.width = `${sliceWidth}%`;
+                    div.style.height = '100%';
+                    div.style.backgroundColor = hex;
+                    iconEl.appendChild(div);
+                });
+            } else if (selectedObject && selectedObject.material && selectedObject.material.color) {
+                // Tampilkan warna solid sesuai objek yang sedang dipilih (persis seperti gambar ke-2)
+                const hex = '#' + selectedObject.material.color.getHexString();
+                iconEl.innerHTML = '';
+                iconEl.style.backgroundColor = hex;
+            } else {
+                // Jika tidak ada objek yang dipilih, tampilkan warna aktif terakhir
+                iconEl.innerHTML = '';
+                iconEl.style.backgroundColor = currentColor;
+            }
+        }
+
+        function updateToolsButtonsState() {
+            const hasSelection = !!selectedObject;
+            const hasMulti = multiSelectedObjects.length >= 2;
+            const groupBtn = document.getElementById('tool-group');
+            if (groupBtn) {
+                groupBtn.disabled = !hasMulti;
+            }
+            const deselectBtn = document.getElementById('tool-deselect');
+            if (deselectBtn) {
+                deselectBtn.disabled = !hasSelection;
+            }
+        }
+
+        function selectObject(obj, addToSelection = false) {
+            if (!obj) {
+                selectedObject = null;
+                multiSelectedObjects = [];
+            } else if (addToSelection) {
+                const idx = multiSelectedObjects.indexOf(obj);
+                if (idx === -1) {
+                    multiSelectedObjects.push(obj);
+                    selectedObject = obj;
+                } else if (multiSelectedObjects.length > 1) {
+                    multiSelectedObjects.splice(idx, 1);
+                    selectedObject = multiSelectedObjects[multiSelectedObjects.length - 1];
+                }
+            } else {
+                selectedObject = obj;
+                multiSelectedObjects = [obj];
+            }
+
+            if (selectedObject) {
+                transformControls.attach(selectedObject);
+                selectionBoxHelper.setFromObject(selectedObject);
+                selectionBoxHelper.visible = true;
+
+                // Sinkronisasi nilai warna & material ke UI
+                if (selectedObject.material && selectedObject.material.color) {
+                    const hex = '#' + selectedObject.material.color.getHexString();
+                    currentColor = hex;
+                    document.getElementById('custom-color-picker').value = hex;
+                    document.getElementById('mat-roughness').value = selectedObject.material.roughness ?? 0.42;
+                    document.getElementById('mat-metalness').value = selectedObject.material.metalness ?? 0.08;
+                    document.getElementById('mat-opacity').value = selectedObject.material.opacity ?? 1;
+                    document.getElementById('mat-wireframe').checked = !!selectedObject.material.wireframe;
+                }
+
+                document.getElementById('inspector-bar').classList.remove('hidden');
+                document.getElementById('inspector-bar').classList.add('flex');
+                updateInspectorUI();
+            } else {
+                transformControls.detach();
+                selectionBoxHelper.visible = false;
+                document.getElementById('inspector-bar').classList.add('hidden');
+                document.getElementById('inspector-bar').classList.remove('flex');
+            }
+
+            updateColorTabIcon();
+            updateToolsButtonsState();
+            updateDimensionLabels();
+            updateOutlinerUI();
+        }
+
+        function updateDimensionLabels() {
+            const overlay = document.getElementById('dimension-overlay');
+            if (!showDimensions || !selectedObject) {
+                overlay.classList.add('hidden');
+                return;
+            }
+            overlay.classList.remove('hidden');
+
+            const box = new THREE.Box3().setFromObject(selectedObject);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+
+            const lblW = document.getElementById('dim-label-w');
+            const lblH = document.getElementById('dim-label-h');
+            const lblD = document.getElementById('dim-label-d');
+
+            lblW.textContent = `X: ${size.x.toFixed(2)}`;
+            lblH.textContent = `Y: ${size.y.toFixed(2)}`;
+            lblD.textContent = `Z: ${size.z.toFixed(2)}`;
+
+            const posW = new THREE.Vector3((box.min.x + box.max.x) / 2, box.min.y, box.max.z + 0.3);
+            const posH = new THREE.Vector3(box.max.x + 0.3, (box.min.y + box.max.y) / 2, box.max.z);
+            const posD = new THREE.Vector3(box.max.x + 0.3, box.min.y, (box.min.z + box.max.z) / 2);
+
+            projectToScreen(posW, lblW);
+            projectToScreen(posH, lblH);
+            projectToScreen(posD, lblD);
+        }
+
+        function projectToScreen(vec3, domElem) {
+            const v = vec3.clone().project(camera);
+            const x = (v.x * 0.5 + 0.5) * window.innerWidth;
+            const y = (-(v.y * 0.5) + 0.5) * window.innerHeight;
+            domElem.style.left = `${x}px`;
+            domElem.style.top = `${y}px`;
+        }
+
+        function updateInspectorUI() {
+            if (!selectedObject) return;
+            document.getElementById('selected-obj-name').textContent =
+                multiSelectedObjects.length > 1
+                    ? `${multiSelectedObjects.length} Objek`
+                    : selectedObject.name;
+            const mode = transformControls.getMode();
+            const inpX = document.getElementById('inp-x');
+            const inpY = document.getElementById('inp-y');
+            const inpZ = document.getElementById('inp-z');
+
+            if (mode === 'translate') {
+                inpX.value = selectedObject.position.x.toFixed(2);
+                inpY.value = selectedObject.position.y.toFixed(2);
+                inpZ.value = selectedObject.position.z.toFixed(2);
+            } else if (mode === 'scale') {
+                inpX.value = selectedObject.scale.x.toFixed(2);
+                inpY.value = selectedObject.scale.y.toFixed(2);
+                inpZ.value = selectedObject.scale.z.toFixed(2);
+            } else if (mode === 'rotate') {
+                inpX.value = THREE.MathUtils.radToDeg(selectedObject.rotation.x).toFixed(0);
+                inpY.value = THREE.MathUtils.radToDeg(selectedObject.rotation.y).toFixed(0);
+                inpZ.value = THREE.MathUtils.radToDeg(selectedObject.rotation.z).toFixed(0);
+            }
+            updateDimensionLabels();
+        }
+
+        function updateOutlinerUI() {
+            const listEl = document.getElementById('outliner-list');
+            const badgeEl = document.getElementById('object-count-badge');
+            badgeEl.textContent = objects.length;
+            listEl.innerHTML = '';
+
+            if (objects.length === 0) {
+                listEl.innerHTML = `<div class="text-xs text-gray-500 text-center py-4">Belum ada objek 3D</div>`;
+                return;
+            }
+
+            objects.forEach((obj) => {
+                const isSelected = obj === selectedObject || multiSelectedObjects.includes(obj);
+                const item = document.createElement('div');
+                item.className = `flex items-center justify-between px-2.5 py-2 rounded-lg cursor-pointer text-xs transition ${
+                    isSelected ? 'bg-blue-600/30 text-white font-semibold border border-blue-500/40' : 'text-gray-300 hover:bg-white/5'
+                }`;
+
+                const colorHex = obj.material && obj.material.color ? '#' + obj.material.color.getHexString() : '#888';
+                item.innerHTML = `
+                    <div class="flex items-center gap-2 truncate">
+                        <span class="w-3 h-3 rounded-full shrink-0 border border-white/30" style="background:${colorHex}"></span>
+                        <span class="truncate">${obj.name}</span>
+                    </div>
+                    <button class="text-gray-400 hover:text-red-400 px-1" title="Hapus">✕</button>
+                `;
+
+                item.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON') {
+                        selectObject(obj);
+                        deleteSelectedObject();
+                    } else {
+                        selectObject(obj, e.shiftKey);
+                    }
+                });
+                listEl.appendChild(item);
+            });
+        }
+
+        // ============================================================================
+        // RAYCASTING UNTUK KLIK OBJEK DI VIEWPORT 3D
+        // ============================================================================
+        function setupCanvasPointerSelection() {
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            let downPos = { x: 0, y: 0 };
+
+            renderer.domElement.addEventListener('pointerdown', (e) => {
+                downPos = { x: e.clientX, y: e.clientY };
+            });
+
+            renderer.domElement.addEventListener('pointerup', (e) => {
+                // Abaikan jika pengguna sedang menggeser kamera atau menyeret gizmo
+                const moveDist = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y);
+                if (moveDist > 5 || transformControls.dragging) return;
+
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(objects, false);
+
+                if (intersects.length > 0) {
+                    // Di 3dc.io, mengklik objek lain atau menahan Shift akan bisa multi-select
+                    selectObject(intersects[0].object, e.shiftKey);
+                } else {
+                    selectObject(null);
+                }
+            });
+        }
+
+        // ============================================================================
+        // OPERASI TOOLS 3DC.IO (UNDO, REDO, SUBTRACT, DELETE, DIMENSION, CLONE, GROUP, DESELECT)
+        // ============================================================================
+        function cloneSelectedObject() {
+            if (!selectedObject) {
+                showToast('Pilih objek terlebih dahulu');
+                return;
+            }
+            const clonedGeo = selectedObject.geometry.clone();
+            const clonedMat = selectedObject.material.clone();
+            const cloneMesh = new THREE.Mesh(clonedGeo, clonedMat);
+
+            cloneMesh.position.copy(selectedObject.position).add(new THREE.Vector3(0.8, 0, 0.8));
+            cloneMesh.rotation.copy(selectedObject.rotation);
+            cloneMesh.scale.copy(selectedObject.scale);
+            cloneMesh.castShadow = true;
+            cloneMesh.receiveShadow = true;
+
+            registerObject(cloneMesh, selectedObject.name + ' Copy');
+            selectObject(cloneMesh);
+            saveHistoryState();
+            showToast('Objek berhasil diduplikasi (Clone)');
+        }
+
+        function deleteSelectedObject() {
+            if (!selectedObject) {
+                showToast('Pilih objek yang ingin dihapus');
+                return;
+            }
+            const name = selectedObject.name;
+            const idx = objects.indexOf(selectedObject);
+            if (idx !== -1) objects.splice(idx, 1);
+
+            transformControls.detach();
+            scene.remove(selectedObject);
+            if (selectedObject.geometry) selectedObject.geometry.dispose();
+            if (selectedObject.material) selectedObject.material.dispose();
+
+            selectObject(objects.length > 0 ? objects[objects.length - 1] : null);
+            saveHistoryState();
+            showToast(`${name} dihapus`);
+        }
+
+        // ============================================================================
+        // ENGINE 3D BOOLEAN CSG (CONSTRUCTIVE SOLID GEOMETRY) UNTUK FITUR SUBTRACT ASLI
+        // ============================================================================
+        class CSGVector {
+            constructor(x = 0, y = 0, z = 0) {
+                this.x = x; this.y = y; this.z = z;
+            }
+            clone() { return new CSGVector(this.x, this.y, this.z); }
+            negated() { return new CSGVector(-this.x, -this.y, -this.z); }
+            add(a) { return new CSGVector(this.x + a.x, this.y + a.y, this.z + a.z); }
+            sub(a) { return new CSGVector(this.x - a.x, this.y - a.y, this.z - a.z); }
+            times(a) { return new CSGVector(this.x * a, this.y * a, this.z * a); }
+            dividedBy(a) { return new CSGVector(this.x / a, this.y / a, this.z / a); }
+            dot(a) { return this.x * a.x + this.y * a.y + this.z * a.z; }
+            lerp(a, t) { return this.add(a.sub(this).times(t)); }
+            length() { return Math.sqrt(this.dot(this)); }
+            unit() { return this.dividedBy(this.length() || 1); }
+            cross(a) {
+                return new CSGVector(
+                    this.y * a.z - this.z * a.y,
+                    this.z * a.x - this.x * a.z,
+                    this.x * a.y - this.y * a.x
+                );
+            }
+        }
+
+        class CSGVertex {
+            constructor(pos, normal) {
+                this.pos = new CSGVector(pos.x, pos.y, pos.z);
+                this.normal = new CSGVector(normal.x, normal.y, normal.z);
+            }
+            clone() { return new CSGVertex(this.pos.clone(), this.normal.clone()); }
+            flip() { this.normal = this.normal.negated(); }
+            interpolate(other, t) {
+                return new CSGVertex(
+                    this.pos.lerp(other.pos, t),
+                    this.normal.lerp(other.normal, t)
+                );
+            }
+        }
+
+        class CSGPlane {
+            constructor(normal, w) {
+                this.normal = normal;
+                this.w = w;
+            }
+            static fromPoints(a, b, c) {
+                const n = b.sub(a).cross(c.sub(a)).unit();
+                return new CSGPlane(n, n.dot(a));
+            }
+            clone() { return new CSGPlane(this.normal.clone(), this.w); }
+            flip() {
+                this.normal = this.normal.negated();
+                this.w = -this.w;
+            }
+            splitPolygon(polygon, coplanarFront, coplanarBack, front, back) {
+                const EPSILON = 1e-5;
+                const COPLANAR = 0, FRONT = 1, BACK = 2, SPANNING = 3;
+                let polygonType = 0;
+                const types = [];
+
+                for (let i = 0; i < polygon.vertices.length; i++) {
+                    const t = this.normal.dot(polygon.vertices[i].pos) - this.w;
+                    const type = (t < -EPSILON) ? BACK : (t > EPSILON) ? FRONT : COPLANAR;
+                    polygonType |= type;
+                    types.push(type);
+                }
+
+                switch (polygonType) {
+                    case COPLANAR:
+                        (this.normal.dot(polygon.plane.normal) > 0 ? coplanarFront : coplanarBack).push(polygon);
+                        break;
+                    case FRONT:
+                        front.push(polygon);
+                        break;
+                    case BACK:
+                        back.push(polygon);
+                        break;
+                    case SPANNING: {
+                        const f = [], b = [];
+                        for (let i = 0; i < polygon.vertices.length; i++) {
+                            const j = (i + 1) % polygon.vertices.length;
+                            const ti = types[i], tj = types[j];
+                            const vi = polygon.vertices[i], vj = polygon.vertices[j];
+                            if (ti !== BACK) f.push(vi);
+                            if (ti !== FRONT) b.push(ti !== BACK ? vi.clone() : vi);
+                            if ((ti | tj) === SPANNING) {
+                                const denom = this.normal.dot(vj.pos.sub(vi.pos));
+                                const t = Math.abs(denom) > 1e-8 ? (this.w - this.normal.dot(vi.pos)) / denom : 0.5;
+                                const v = vi.interpolate(vj, t);
+                                f.push(v);
+                                b.push(v.clone());
+                            }
+                        }
+                        if (f.length >= 3) front.push(new CSGPolygon(f));
+                        if (b.length >= 3) back.push(new CSGPolygon(b));
+                        break;
+                    }
+                }
+            }
+        }
+
+        class CSGPolygon {
+            constructor(vertices) {
+                this.vertices = vertices;
+                this.plane = CSGPlane.fromPoints(vertices[0].pos, vertices[1].pos, vertices[2].pos);
+            }
+            clone() { return new CSGPolygon(this.vertices.map(v => v.clone())); }
+            flip() {
+                this.vertices.reverse().forEach(v => v.flip());
+                this.plane.flip();
+            }
+        }
+
+        class CSGNode {
+            constructor(polygons) {
+                this.plane = null;
+                this.front = null;
+                this.back = null;
+                this.polygons = [];
+                if (polygons && polygons.length) this.build(polygons);
+            }
+            clone() {
+                const node = new CSGNode();
+                node.plane = this.plane && this.plane.clone();
+                node.front = this.front && this.front.clone();
+                node.back = this.back && this.back.clone();
+                node.polygons = this.polygons.map(p => p.clone());
+                return node;
+            }
+            invert() {
+                for (let i = 0; i < this.polygons.length; i++) this.polygons[i].flip();
+                if (this.plane) this.plane.flip();
+                if (this.front) this.front.invert();
+                if (this.back) this.back.invert();
+                const temp = this.front;
+                this.front = this.back;
+                this.back = temp;
+            }
+            clipPolygons(polygons) {
+                if (!this.plane) return polygons.slice();
+                let front = [], back = [];
+                for (let i = 0; i < polygons.length; i++) {
+                    this.plane.splitPolygon(polygons[i], front, back, front, back);
+                }
+                if (this.front) front = this.front.clipPolygons(front);
+                if (this.back) back = this.back.clipPolygons(back);
+                else back = [];
+                return front.concat(back);
+            }
+            clipTo(bsp) {
+                this.polygons = bsp.clipPolygons(this.polygons);
+                if (this.front) this.front.clipTo(bsp);
+                if (this.back) this.back.clipTo(bsp);
+            }
+            allPolygons() {
+                let polygons = this.polygons.slice();
+                if (this.front) polygons = polygons.concat(this.front.allPolygons());
+                if (this.back) polygons = polygons.concat(this.back.allPolygons());
+                return polygons;
+            }
+            build(polygons) {
+                if (!polygons.length) return;
+                if (!this.plane) this.plane = polygons[0].plane.clone();
+                const front = [], back = [];
+                for (let i = 0; i < polygons.length; i++) {
+                    this.plane.splitPolygon(polygons[i], this.polygons, this.polygons, front, back);
+                }
+                if (front.length) {
+                    if (!this.front) this.front = new CSGNode();
+                    this.front.build(front);
+                }
+                if (back.length) {
+                    if (!this.back) this.back = new CSGNode();
+                    this.back.build(back);
+                }
+            }
+        }
+
+        function meshToCSGPolygons(mesh) {
+            mesh.updateMatrixWorld(true);
+            const geom = mesh.geometry.clone().toNonIndexed();
+            geom.applyMatrix4(mesh.matrixWorld);
+            geom.computeVertexNormals();
+
+            const pos = geom.getAttribute('position');
+            const norm = geom.getAttribute('normal');
+            const polygons = [];
+
+            for (let i = 0; i < pos.count; i += 3) {
+                const v0 = new CSGVertex(
+                    { x: pos.getX(i), y: pos.getY(i), z: pos.getZ(i) },
+                    { x: norm.getX(i), y: norm.getY(i), z: norm.getZ(i) }
+                );
+                const v1 = new CSGVertex(
+                    { x: pos.getX(i + 1), y: pos.getY(i + 1), z: pos.getZ(i + 1) },
+                    { x: norm.getX(i + 1), y: norm.getY(i + 1), z: norm.getZ(i + 1) }
+                );
+                const v2 = new CSGVertex(
+                    { x: pos.getX(i + 2), y: pos.getY(i + 2), z: pos.getZ(i + 2) },
+                    { x: norm.getX(i + 2), y: norm.getY(i + 2), z: norm.getZ(i + 2) }
+                );
+                // Abaikan segitiga degenerate
+                if (v1.pos.sub(v0.pos).cross(v2.pos.sub(v0.pos)).length() > 1e-7) {
+                    polygons.push(new CSGPolygon([v0, v1, v2]));
+                }
+            }
+            geom.dispose();
+            return polygons;
+        }
+
+        function performCSGSubtract(targetMesh, cutterMesh) {
+            const a = new CSGNode(meshToCSGPolygons(targetMesh));
+            const b = new CSGNode(meshToCSGPolygons(cutterMesh));
+
+            a.invert();
+            a.clipTo(b);
+            b.clipTo(a);
+            b.invert();
+            b.clipTo(a);
+            b.invert();
+            a.build(b.allPolygons());
+            a.invert();
+
+            const resultPolygons = a.allPolygons();
+            const positions = [];
+            const normals = [];
+
+            // Kembalikan koordinat world hasil CSG ke local space targetMesh
+            const invTargetMatrix = new THREE.Matrix4().copy(targetMesh.matrixWorld).invert();
+            const normalMatrix = new THREE.Matrix3().getNormalMatrix(invTargetMatrix);
+            const tmpPos = new THREE.Vector3();
+            const tmpNorm = new THREE.Vector3();
+
+            resultPolygons.forEach((poly) => {
+                for (let i = 1; i < poly.vertices.length - 1; i++) {
+                    const tri = [poly.vertices[0], poly.vertices[i], poly.vertices[i + 1]];
+                    tri.forEach((v) => {
+                        tmpPos.set(v.pos.x, v.pos.y, v.pos.z).applyMatrix4(invTargetMatrix);
+                        positions.push(tmpPos.x, tmpPos.y, tmpPos.z);
+
+                        tmpNorm.set(poly.plane.normal.x, poly.plane.normal.y, poly.plane.normal.z)
+                            .applyMatrix3(normalMatrix)
+                            .normalize();
+                        normals.push(tmpNorm.x, tmpNorm.y, tmpNorm.z);
+                    });
+                }
+            });
+
+            const newGeom = new THREE.BufferGeometry();
+            newGeom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            newGeom.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+            return newGeom;
+        }
+
+        // Subtract (Pemotongan / Pelubangan objek 3D CSG seperti di 3DC.io)
+        function subtractSelectedObject() {
+            if (!selectedObject) {
+                showToast('Pilih objek pemotong terlebih dahulu');
+                return;
+            }
+            if (objects.length < 2) {
+                showToast('Butuh minimal 2 objek untuk melakukan Subtract');
+                return;
+            }
+
+            // Objek yang sedang dipilih bertindak sebagai pemotong (Cutter)
+            const cutter = selectedObject;
+            cutter.updateMatrixWorld(true);
+            const cutterBox = new THREE.Box3().setFromObject(cutter);
+            let targetCutCount = 0;
+            let lastCutTarget = null;
+
+            objects.forEach((target) => {
+                if (target === cutter) return;
+                target.updateMatrixWorld(true);
+                const targetBox = new THREE.Box3().setFromObject(target);
+
+                if (cutterBox.intersectsBox(targetBox)) {
+                    try {
+                        const newGeo = performCSGSubtract(target, cutter);
+                        if (newGeo.getAttribute('position').count > 0) {
+                            target.geometry.dispose();
+                            target.geometry = newGeo;
+                            targetCutCount++;
+                            lastCutTarget = target;
+                        }
+                    } catch (err) {
+                        console.error('CSG Subtract error:', err);
+                    }
+                }
+            });
+
+            if (targetCutCount === 0) {
+                showToast('Geser objek pemotong hingga menembus objek lain lalu klik Subtract!');
+                return;
+            }
+
+            // Hapus objek pemotong setelah berhasil memotong objek target (sesuai alur 3DC.io)
+            const cutterIdx = objects.indexOf(cutter);
+            if (cutterIdx !== -1) objects.splice(cutterIdx, 1);
+            transformControls.detach();
+            scene.remove(cutter);
+            if (cutter.geometry) cutter.geometry.dispose();
+            if (cutter.material) cutter.material.dispose();
+
+            selectObject(lastCutTarget || (objects.length > 0 ? objects[objects.length - 1] : null));
+            saveHistoryState();
+            showToast(`Subtract berhasil memotong ${targetCutCount} objek!`);
+        }
+
+        function toggleDimensionTool() {
+            showDimensions = !showDimensions;
+            const dimBtn = document.getElementById('tool-dimension');
+            if (dimBtn) {
+                dimBtn.classList.toggle('dimension-on', showDimensions);
+            }
+            updateDimensionLabels();
+            showToast(showDimensions ? 'Ukuran Dimensi (X/Y/Z) Ditampilkan' : 'Ukuran Dimensi Disembunyikan');
+        }
+
+        function deselectAllObjects() {
+            selectObject(null);
+            showToast('Seleksi objek dilepas (Deselect)');
+        }
+
+        function groupObjects() {
+            // Jika multiSelectedObjects >= 2, gabungkan objek yang dipilih; jika tidak, gabungkan semua objek di scene
+            const listToGroup = multiSelectedObjects.length >= 2 ? [...multiSelectedObjects] : [...objects];
+            if (listToGroup.length < 2) {
+                showToast('Minimal 2 objek untuk di-Group');
+                return;
+            }
+            // Gabungkan geometry ke dalam satu BufferGeometry tunggal beserta warna vertex
+            const mergedPositions = [];
+            const mergedNormals = [];
+
+            listToGroup.forEach((mesh) => {
+                mesh.updateMatrixWorld(true);
+                const geom = mesh.geometry.clone().toNonIndexed();
+                geom.applyMatrix4(mesh.matrixWorld);
+
+                const posAttr = geom.getAttribute('position');
+                const normAttr = geom.getAttribute('normal');
+
+                for (let i = 0; i < posAttr.count; i++) {
+                    mergedPositions.push(posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i));
+                    if (normAttr) {
+                        mergedNormals.push(normAttr.getX(i), normAttr.getY(i), normAttr.getZ(i));
+                    }
+                }
+            });
+
+            const combinedGeo = new THREE.BufferGeometry();
+            combinedGeo.setAttribute('position', new THREE.Float32BufferAttribute(mergedPositions, 3));
+            if (mergedNormals.length > 0) {
+                combinedGeo.setAttribute('normal', new THREE.Float32BufferAttribute(mergedNormals, 3));
+            } else {
+                combinedGeo.computeVertexNormals();
+            }
+
+            // Pusatkan pivot geometry baru
+            combinedGeo.computeBoundingBox();
+            const center = new THREE.Vector3();
+            combinedGeo.boundingBox.getCenter(center);
+            combinedGeo.translate(-center.x, -center.y, -center.z);
+
+            const groupColor = selectedObject && selectedObject.material
+                ? '#' + selectedObject.material.color.getHexString()
+                : currentColor;
+
+            const mat = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(groupColor),
+                roughness: 0.4,
+                metalness: 0.1
+            });
+
+            // Hapus objek-objek yang digabungkan dari scene
+            listToGroup.forEach((m) => {
+                const i = objects.indexOf(m);
+                if (i !== -1) objects.splice(i, 1);
+                scene.remove(m);
+                if (m.geometry) m.geometry.dispose();
+                if (m.material) m.material.dispose();
+            });
+
+            const groupedMesh = new THREE.Mesh(combinedGeo, mat);
+            groupedMesh.position.copy(center);
+            groupedMesh.castShadow = true;
+            groupedMesh.receiveShadow = true;
+
+            registerObject(groupedMesh, `Group ${shapeCounter++}`);
+            selectObject(groupedMesh);
+            saveHistoryState();
+            showToast('Objek berhasil digabungkan (Group)!');
+        }
+
+        function clearAllObjects(recordHistory = true) {
+            selectObject(null);
+            while (objects.length > 0) {
+                const obj = objects.pop();
+                scene.remove(obj);
+                if (obj.geometry) obj.geometry.dispose();
+                if (obj.material) obj.material.dispose();
+            }
+            updateOutlinerUI();
+            if (recordHistory) saveHistoryState();
+        }
+
+        // ============================================================================
+        // UNDO / REDO SYSTEM
+        // ============================================================================
+        function serializeGeometry(geom) {
+            const posAttr = geom.getAttribute('position');
+            const normAttr = geom.getAttribute('normal');
+            const uvAttr = geom.getAttribute('uv');
+            const indexAttr = geom.getIndex();
+
+            return {
+                position: posAttr ? Array.from(posAttr.array) : [],
+                normal: normAttr ? Array.from(normAttr.array) : [],
+                uv: uvAttr ? Array.from(uvAttr.array) : null,
+                index: indexAttr ? Array.from(indexAttr.array) : null
+            };
+        }
+
+        function deserializeGeometry(data) {
+            const geom = new THREE.BufferGeometry();
+            if (data.position && data.position.length > 0) {
+                geom.setAttribute('position', new THREE.Float32BufferAttribute(data.position, 3));
+            }
+            if (data.normal && data.normal.length > 0) {
+                geom.setAttribute('normal', new THREE.Float32BufferAttribute(data.normal, 3));
+            }
+            if (data.uv && data.uv.length > 0) {
+                geom.setAttribute('uv', new THREE.Float32BufferAttribute(data.uv, 2));
+            }
+            if (data.index && data.index.length > 0) {
+                geom.setIndex(data.index);
+            }
+            if (!data.normal || data.normal.length === 0) {
+                geom.computeVertexNormals();
+            }
+            geom.computeBoundingBox();
+            geom.computeBoundingSphere();
+            return geom;
+        }
+
+        function serializeSceneState() {
+            return objects.map((obj) => ({
+                name: obj.name,
+                shapeType: obj.userData.shapeType || 'custom',
+                geometryData: serializeGeometry(obj.geometry),
+                position: obj.position.toArray(),
+                rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z],
+                scale: obj.scale.toArray(),
+                color: obj.material && obj.material.color ? '#' + obj.material.color.getHexString() : currentColor,
+                roughness: obj.material ? obj.material.roughness : 0.42,
+                metalness: obj.material ? obj.material.metalness : 0.08,
+                opacity: obj.material ? obj.material.opacity : 1.0,
+                wireframe: obj.material ? !!obj.material.wireframe : false
+            }));
+        }
+
+        function saveHistoryState() {
+            if (isRestoringHistory) return;
+            try {
+                const snapshot = JSON.stringify(serializeSceneState());
+                if (historyIndex >= 0 && historyStack[historyIndex] === snapshot) return;
+
+                historyStack.splice(historyIndex + 1);
+                historyStack.push(snapshot);
+                if (historyStack.length > 20) historyStack.shift();
+                historyIndex = historyStack.length - 1;
+                updateUndoRedoButtons();
+            } catch (err) {
+                console.error('Gagal menyimpan riwayat Undo:', err);
+            }
+        }
+
+        function restoreHistoryState(index) {
+            if (index < 0 || index >= historyStack.length) return;
+            isRestoringHistory = true;
+            try {
+                historyIndex = index;
+                const state = JSON.parse(historyStack[historyIndex]);
+                clearAllObjects(false);
+
+                state.forEach((item) => {
+                    const geom = item.geometryData
+                        ? deserializeGeometry(item.geometryData)
+                        : new THREE.BoxGeometry(2, 2, 2);
+
+                    const mat = new THREE.MeshStandardMaterial({
+                        color: new THREE.Color(item.color || '#38bdf8'),
+                        roughness: item.roughness ?? 0.42,
+                        metalness: item.metalness ?? 0.08,
+                        transparent: (item.opacity ?? 1) < 1,
+                        opacity: item.opacity ?? 1,
+                        wireframe: !!item.wireframe
+                    });
+
+                    const mesh = new THREE.Mesh(geom, mat);
+                    mesh.position.fromArray(item.position || [0, 1, 0]);
+                    if (item.rotation) {
+                        mesh.rotation.set(item.rotation[0], item.rotation[1], item.rotation[2]);
+                    }
+                    if (item.scale) {
+                        mesh.scale.fromArray(item.scale);
+                    }
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    mesh.userData.shapeType = item.shapeType || 'custom';
+                    registerObject(mesh, item.name);
+                });
+
+                if (objects.length > 0) {
+                    selectObject(objects[objects.length - 1]);
+                } else {
+                    selectObject(null);
+                }
+                showToast('Riwayat dikembalikan');
+            } catch (err) {
+                console.error('Gagal memulihkan Undo/Redo:', err);
+                showToast('Gagal memulihkan langkah sebelumnya');
+            } finally {
+                updateUndoRedoButtons();
+                isRestoringHistory = false;
+            }
+        }
+
+        function updateUndoRedoButtons() {
+            const canUndo = historyIndex > 0;
+            const canRedo = historyIndex < historyStack.length - 1;
+            document.getElementById('btn-undo').disabled = !canUndo;
+            document.getElementById('btn-redo').disabled = !canRedo;
+
+            // Sinkronisasi tombol Undo & Redo di dalam panel Tools bawah
+            const toolUndo = document.getElementById('tool-undo');
+            const toolRedo = document.getElementById('tool-redo');
+            if (toolUndo) toolUndo.disabled = !canUndo;
+            if (toolRedo) toolRedo.disabled = !canRedo;
+        }
+
+        // ============================================================================
+        // FITUR DRAW 2D SKETCH KE OBJEK 3D EXTRUDE
+        // ============================================================================
+        function setupSketchDrawer() {
+            const canvas = document.getElementById('sketch-canvas');
+            const ctx = canvas.getContext('2d');
+            let isDrawing = false;
+            let points = [];
+
+            function resetSketchCanvas() {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Grid bantu tipis
+                ctx.strokeStyle = '#e5e7eb';
+                ctx.lineWidth = 1;
+                for (let x = 0; x < canvas.width; x += 20) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+                }
+                for (let y = 0; y < canvas.height; y += 20) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+                }
+                points = [];
+            }
+
+            resetSketchCanvas();
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            }
+
+            canvas.addEventListener('pointerdown', (e) => {
+                resetSketchCanvas();
+                isDrawing = true;
+                const p = getPos(e);
+                points.push(p);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 3;
+            });
+
+            canvas.addEventListener('pointermove', (e) => {
+                if (!isDrawing) return;
+                const p = getPos(e);
+                const last = points[points.length - 1];
+                if (Math.hypot(p.x - last.x, p.y - last.y) > 6) {
+                    points.push(p);
+                    ctx.lineTo(p.x, p.y);
+                    ctx.stroke();
+                }
+            });
+
+            window.addEventListener('pointerup', () => {
+                if (!isDrawing) return;
+                isDrawing = false;
+                if (points.length > 2) {
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(37, 99, 235, 0.2)';
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            });
+
+            document.getElementById('btn-clear-sketch').addEventListener('click', resetSketchCanvas);
+
+            document.getElementById('btn-create-extrude').addEventListener('click', () => {
+                if (points.length < 3) {
+                    showToast('Gambar sebuah bentuk di kanvas terlebih dahulu!');
+                    return;
+                }
+                const shape = new THREE.Shape();
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+                const scale = 0.018;
+
+                shape.moveTo((points[0].x - cx) * scale, -(points[0].y - cy) * scale);
+                for (let i = 1; i < points.length; i++) {
+                    shape.lineTo((points[i].x - cx) * scale, -(points[i].y - cy) * scale);
+                }
+                shape.closePath();
+
+                const depth = parseFloat(document.getElementById('extrude-depth').value) || 1.2;
+                const extrudeGeo = new THREE.ExtrudeGeometry(shape, {
+                    depth: depth,
+                    bevelEnabled: true,
+                    bevelThickness: 0.08,
+                    bevelSize: 0.06,
+                    bevelSegments: 2
+                });
+                extrudeGeo.center();
+
+                const mat = new THREE.MeshStandardMaterial({
+                    color: new THREE.Color(currentColor),
+                    roughness: 0.4,
+                    metalness: 0.1
+                });
+                const mesh = new THREE.Mesh(extrudeGeo, mat);
+                mesh.position.set(0, 1.2, 0);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+
+                registerObject(mesh, `Sketch ${shapeCounter++}`);
+                selectObject(mesh);
+                saveHistoryState();
+                document.getElementById('modal-draw').classList.add('hidden');
+                resetSketchCanvas();
+                showToast('Sketsa 2D berhasil diubah menjadi 3D!');
+            });
+        }
+
+        // ============================================================================
+        // PEMBUATAN 3D TEXT VOXEL/RELIEF TANPA FONT EKSTERNAL
+        // ============================================================================
+        function create3DTextObject(textString) {
+            const cleanText = (textString || '3DC').trim().toUpperCase();
+            if (!cleanText) return;
+
+            // Render teks ke offscreen canvas lalu bangun relief 3D dengan tekstur timbul & balok 3D
+            const tCanvas = document.createElement('canvas');
+            tCanvas.width = 512;
+            tCanvas.height = 160;
+            const tCtx = tCanvas.getContext('2d');
+
+            tCtx.fillStyle = currentColor;
+            tCtx.fillRect(0, 0, tCanvas.width, tCanvas.height);
+
+            tCtx.fillStyle = '#ffffff';
+            tCtx.font = 'bold 92px Inter, sans-serif';
+            tCtx.textAlign = 'center';
+            tCtx.textBaseline = 'middle';
+            tCtx.fillText(cleanText, tCanvas.width / 2, tCanvas.height / 2);
+
+            const texture = new THREE.CanvasTexture(tCanvas);
+            const width = Math.max(2.2, cleanText.length * 0.55);
+            const geo = new THREE.BoxGeometry(width, 1.2, 0.45);
+
+            const sideMat = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(currentColor),
+                roughness: 0.4,
+                metalness: 0.15
+            });
+            const frontMat = new THREE.MeshStandardMaterial({
+                map: texture,
+                roughness: 0.3,
+                metalness: 0.1
+            });
+
+            // Gunakan material utama agar mudah diganti warnanya juga
+            const mesh = new THREE.Mesh(geo, frontMat);
+            mesh.position.set(0, 0.6, 0);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            registerObject(mesh, `Text "${cleanText}"`);
+            selectObject(mesh);
+            saveHistoryState();
+            showToast(`Teks 3D "${cleanText}" dibuat`);
+        }
+
+        // ============================================================================
+        // PRESET SCENE (ROBOT & RUMAH 3D)
+        // ============================================================================
+        function loadRobotPreset() {
+            clearAllObjects(false);
+            const addPart = (type, color, pos, scale, name) => {
+                const m = createPrimitiveMesh(type, color);
+                m.position.set(...pos);
+                m.scale.set(...scale);
+                registerObject(m, name);
+                return m;
+            };
+            addPart('cylinder', '#64748b', [-0.55, 0.7, 0], [0.35, 0.65, 0.35], 'Left Leg');
+            addPart('cylinder', '#64748b', [0.55, 0.7, 0], [0.35, 0.65, 0.35], 'Right Leg');
+            addPart('cube', '#2b88d8', [0, 2.3, 0], [1.1, 1.2, 0.75], 'Robot Body');
+            addPart('cube', '#38bdf8', [0, 4.0, 0], [0.85, 0.75, 0.75], 'Robot Head');
+            addPart('sphere', '#facc15', [-0.3, 4.1, 0.75], [0.18, 0.18, 0.18], 'Left Eye');
+            const last = addPart('sphere', '#facc15', [0.3, 4.1, 0.75], [0.18, 0.18, 0.18], 'Right Eye');
+            selectObject(last);
+            saveHistoryState();
+            showToast('Template Mini Robot dimuat');
+        }
+
+        function loadHousePreset() {
+            clearAllObjects(false);
+            const walls = createPrimitiveMesh('cube', '#f8fafc');
+            walls.position.set(0, 1.2, 0);
+            walls.scale.set(1.6, 1.2, 1.4);
+            registerObject(walls, 'Walls');
+
+            const roof = createPrimitiveMesh('pyramid', '#ef4444');
+            roof.position.set(0, 3.3, 0);
+            roof.scale.set(1.85, 1.0, 1.65);
+            registerObject(roof, 'Roof');
+
+            const door = createPrimitiveMesh('cube', '#78350f');
+            door.position.set(0, 0.65, 1.42);
+            door.scale.set(0.35, 0.65, 0.08);
+            registerObject(door, 'Door');
+
+            selectObject(roof);
+            saveHistoryState();
+            showToast('Template Rumah 3D dimuat');
+        }
+
+        // ============================================================================
+        // EKSPOR & IMPOR FILE (.STL, .OBJ, .JSON, SCREENSHOT .PNG)
+        // ============================================================================
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportSTL() {
+            if (objects.length === 0) return showToast('Scene masih kosong');
+            const exportGroup = new THREE.Group();
+            objects.forEach((o) => exportGroup.add(o.clone()));
+            const exporter = new THREE.STLExporter();
+            const result = exporter.parse(exportGroup, { binary: true });
+            downloadBlob(new Blob([result], { type: 'application/octet-stream' }), '3ds-model.stl');
+            showToast('File 3ds-model.stl berhasil diunduh!');
+        }
+
+        function exportOBJ() {
+            if (objects.length === 0) return showToast('Scene masih kosong');
+            const exportGroup = new THREE.Group();
+            objects.forEach((o) => exportGroup.add(o.clone()));
+            const exporter = new THREE.OBJExporter();
+            const result = exporter.parse(exportGroup);
+            downloadBlob(new Blob([result], { type: 'text/plain' }), '3ds-model.obj');
+            showToast('File 3ds-model.obj berhasil diunduh!');
+        }
+
+        function exportGLB() {
+            if (objects.length === 0) return showToast('Scene masih kosong');
+            const exportGroup = new THREE.Group();
+            objects.forEach((o) => {
+                const cloned = o.clone();
+                cloned.geometry = o.geometry.clone();
+                cloned.material = o.material.clone();
+                exportGroup.add(cloned);
+            });
+            const exporter = new THREE.GLTFExporter();
+            exporter.parse(
+                exportGroup,
+                (result) => {
+                    if (result instanceof ArrayBuffer) {
+                        downloadBlob(new Blob([result], { type: 'model/gltf-binary' }), '3ds-model.glb');
+                        showToast('File 3ds-model.glb berhasil diunduh!');
+                    }
+                },
+                { binary: true }
+            );
+        }
+
+        function takeScreenshot() {
+            // Sembunyikan gizmo dan garis bantu sesaat agar hasil tangkapan layar bersih
+            const prevGizmoVis = transformControls.visible;
+            const prevBoxVis = selectionBoxHelper.visible;
+            transformControls.visible = false;
+            selectionBoxHelper.visible = false;
+
+            renderer.render(scene, camera);
+            const dataURL = renderer.domElement.toDataURL('image/png');
+
+            transformControls.visible = prevGizmoVis;
+            selectionBoxHelper.visible = prevBoxVis;
+            renderer.render(scene, camera);
+
+            const link = document.createElement('a');
+            link.download = `3ds-render-${Date.now()}.png`;
+            link.href = dataURL;
+            link.click();
+            showToast('Gambar Render 3DS (.PNG) berhasil disimpan!');
+        }
+
+        function handleFileImport(file) {
+            if (!file) return;
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            if (ext === 'json') {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        historyStack.push(e.target.result);
+                        restoreHistoryState(historyStack.length - 1);
+                        showToast('Proyek JSON berhasil dimuat');
+                    } catch (err) {
+                        showToast('Format JSON tidak valid');
+                    }
+                };
+                reader.readAsText(file);
+            } else if (ext === 'stl') {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const loader = new THREE.STLLoader();
+                    const geometry = loader.parse(e.target.result);
+                    geometry.computeVertexNormals();
+                    geometry.center();
+                    const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(currentColor), roughness: 0.4 });
+                    const mesh = new THREE.Mesh(geometry, mat);
+                    mesh.position.set(0, 1.5, 0);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    registerObject(mesh, file.name.replace(/\.[^/.]+$/, ''));
+                    selectObject(mesh);
+                    saveHistoryState();
+                    showToast(`Model STL "${file.name}" diimpor`);
+                };
+                reader.readAsArrayBuffer(file);
+            } else if (ext === 'obj') {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const loader = new THREE.OBJLoader();
+                    const objGroup = loader.parse(e.target.result);
+                    objGroup.traverse((child) => {
+                        if (child.isMesh) {
+                            const geom = child.geometry.clone();
+                            geom.center();
+                            const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(currentColor), roughness: 0.4 });
+                            const mesh = new THREE.Mesh(geom, mat);
+                            mesh.position.set(0, 1.5, 0);
+                            mesh.castShadow = true;
+                            mesh.receiveShadow = true;
+                            registerObject(mesh, child.name || 'Imported OBJ');
+                            selectObject(mesh);
+                        }
+                    });
+                    saveHistoryState();
+                    showToast(`Model OBJ "${file.name}" diimpor`);
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // ============================================================================
+        // INISIALISASI EVENT UI & SHORTCUT KEYBOARD
+        // ============================================================================
+        function setupUIEvents() {
+            // 1. Tab Navigasi Bawah (Add, Color, Tools)
+            const tabs = {
+                add: { btn: document.getElementById('tab-add'), panel: document.getElementById('panel-add') },
+                color: { btn: document.getElementById('tab-color'), panel: document.getElementById('panel-color') },
+                tools: { btn: document.getElementById('tab-tools'), panel: document.getElementById('panel-tools') }
+            };
+
+            let activeTabName = 'add';
+
+            function switchTab(name) {
+                // Jika tab yang sama diklik, toggle buka/tutup panelnya seperti di 3DC.io
+                if (activeTabName === name && !tabs[name].panel.classList.contains('hidden')) {
+                    tabs[name].panel.classList.add('hidden');
+                    tabs[name].btn.classList.remove('active');
+                    activeTabName = null;
+                    return;
+                }
+                Object.keys(tabs).forEach((k) => {
+                    tabs[k].panel.classList.toggle('hidden', k !== name);
+                    tabs[k].btn.classList.toggle('active', k === name);
+                });
+                activeTabName = name;
+            }
+
+            tabs.add.btn.addEventListener('click', () => switchTab('add'));
+            tabs.color.btn.addEventListener('click', () => switchTab('color'));
+            tabs.tools.btn.addEventListener('click', () => switchTab('tools'));
+
+            // 2. Tombol Grid Bentuk 3D
+            document.querySelectorAll('[data-shape]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const shapeType = btn.getAttribute('data-shape');
+                    addShapeToScene(shapeType);
+                });
+            });
+
+            // 3. Swatches Warna & Material
+            const swatchContainer = document.getElementById('color-swatches');
+            PALETTE_COLORS.forEach((hex) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-8 h-8 rounded-lg border border-white/20 hover:scale-110 transition shadow';
+                btn.style.backgroundColor = hex;
+                btn.addEventListener('click', () => applyColorToSelected(hex));
+                swatchContainer.appendChild(btn);
+            });
+
+            document.getElementById('custom-color-picker').addEventListener('input', (e) => {
+                applyColorToSelected(e.target.value);
+            });
+
+            function applyColorToSelected(hex) {
+                currentColor = hex;
+                document.getElementById('custom-color-picker').value = hex;
+                if (selectedObject && selectedObject.material) {
+                    selectedObject.material.color.set(hex);
+                    updateColorTabIcon();
+                    updateOutlinerUI();
+                    saveHistoryState();
+                } else {
+                    updateColorTabIcon();
+                }
+            }
+
+            document.getElementById('mat-roughness').addEventListener('input', (e) => {
+                if (selectedObject && selectedObject.material) {
+                    selectedObject.material.roughness = parseFloat(e.target.value);
+                }
+            });
+            document.getElementById('mat-metalness').addEventListener('input', (e) => {
+                if (selectedObject && selectedObject.material) {
+                    selectedObject.material.metalness = parseFloat(e.target.value);
+                }
+            });
+            document.getElementById('mat-opacity').addEventListener('input', (e) => {
+                if (selectedObject && selectedObject.material) {
+                    const val = parseFloat(e.target.value);
+                    selectedObject.material.transparent = val < 1.0;
+                    selectedObject.material.opacity = val;
+                    selectedObject.material.needsUpdate = true;
+                }
+            });
+            document.getElementById('mat-wireframe').addEventListener('change', (e) => {
+                if (selectedObject && selectedObject.material) {
+                    selectedObject.material.wireframe = e.target.checked;
+                }
+            });
+
+            // 4. Tombol Panel Tools (Sesuai gambar referensi 3DC.io)
+            document.getElementById('tool-undo').addEventListener('click', () => restoreHistoryState(historyIndex - 1));
+            document.getElementById('tool-redo').addEventListener('click', () => restoreHistoryState(historyIndex + 1));
+            document.getElementById('tool-subtract').addEventListener('click', subtractSelectedObject);
+            document.getElementById('tool-delete').addEventListener('click', deleteSelectedObject);
+            document.getElementById('tool-dimension').addEventListener('click', toggleDimensionTool);
+            document.getElementById('tool-clone').addEventListener('click', cloneSelectedObject);
+            document.getElementById('tool-group').addEventListener('click', groupObjects);
+            document.getElementById('tool-deselect').addEventListener('click', deselectAllObjects);
+
+            // 5. Tombol Mode Transformasi di Kanan Bawah (Move, Scale, Rotate)
+            const modeBtns = {
+                translate: document.getElementById('mode-translate'),
+                scale: document.getElementById('mode-scale'),
+                rotate: document.getElementById('mode-rotate')
+            };
+
+            function setTransformMode(mode) {
+                transformControls.setMode(mode);
+                Object.keys(modeBtns).forEach((k) => {
+                    modeBtns[k].classList.toggle('active', k === mode);
+                });
+                updateInspectorUI();
+            }
+
+            modeBtns.translate.addEventListener('click', () => setTransformMode('translate'));
+            modeBtns.scale.addEventListener('click', () => setTransformMode('scale'));
+            modeBtns.rotate.addEventListener('click', () => setTransformMode('rotate'));
+
+            // 6. Input Numerik Inspector (X, Y, Z & Snap)
+            ['inp-x', 'inp-y', 'inp-z'].forEach((id) => {
+                document.getElementById(id).addEventListener('change', () => {
+                    if (!selectedObject) return;
+                    const x = parseFloat(document.getElementById('inp-x').value) || 0;
+                    const y = parseFloat(document.getElementById('inp-y').value) || 0;
+                    const z = parseFloat(document.getElementById('inp-z').value) || 0;
+                    const mode = transformControls.getMode();
+
+                    if (mode === 'translate') selectedObject.position.set(x, y, z);
+                    else if (mode === 'scale') selectedObject.scale.set(Math.max(0.1, x), Math.max(0.1, y), Math.max(0.1, z));
+                    else if (mode === 'rotate') selectedObject.rotation.set(
+                        THREE.MathUtils.degToRad(x),
+                        THREE.MathUtils.degToRad(y),
+                        THREE.MathUtils.degToRad(z)
+                    );
+                    selectionBoxHelper.update();
+                    saveHistoryState();
+                });
+            });
+
+            document.getElementById('chk-snap').addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    transformControls.setTranslationSnap(0.5);
+                    transformControls.setRotationSnap(THREE.MathUtils.degToRad(15));
+                    transformControls.setScaleSnap(0.25);
+                    showToast('Grid Snap Aktif');
+                } else {
+                    transformControls.setTranslationSnap(null);
+                    transformControls.setRotationSnap(null);
+                    transformControls.setScaleSnap(null);
+                    showToast('Grid Snap Nonaktif');
+                }
+            });
+
+            // 7. Undo / Redo / Outliner / Camera / Screenshot
+            document.getElementById('btn-undo').addEventListener('click', () => restoreHistoryState(historyIndex - 1));
+            document.getElementById('btn-redo').addEventListener('click', () => restoreHistoryState(historyIndex + 1));
+
+            document.getElementById('btn-outliner-toggle').addEventListener('click', () => {
+                document.getElementById('outliner-panel').classList.toggle('hidden');
+            });
+            document.getElementById('btn-close-outliner').addEventListener('click', () => {
+                document.getElementById('outliner-panel').classList.add('hidden');
+            });
+
+            document.getElementById('btn-reset-cam').addEventListener('click', () => {
+                camera.position.set(11, 8, 14);
+                orbitControls.target.set(0, 1, 0);
+                orbitControls.update();
+                showToast('Posisi kamera direset');
+            });
+
+            document.getElementById('btn-screenshot').addEventListener('click', takeScreenshot);
+
+            // 8. Modals (Menu, Draw, Text, Import)
+            const modalMenu = document.getElementById('modal-menu');
+            document.getElementById('btn-menu').addEventListener('click', () => modalMenu.classList.remove('hidden'));
+            document.getElementById('btn-close-menu').addEventListener('click', () => modalMenu.classList.add('hidden'));
+
+            document.getElementById('preset-default').addEventListener('click', () => {
+                createDefault3DCScene();
+                modalMenu.classList.add('hidden');
+            });
+            document.getElementById('preset-robot').addEventListener('click', () => {
+                loadRobotPreset();
+                modalMenu.classList.add('hidden');
+            });
+            document.getElementById('preset-house').addEventListener('click', () => {
+                loadHousePreset();
+                modalMenu.classList.add('hidden');
+            });
+
+            document.getElementById('btn-export-stl').addEventListener('click', exportSTL);
+            document.getElementById('btn-export-obj').addEventListener('click', exportOBJ);
+            document.getElementById('btn-export-glb').addEventListener('click', exportGLB);
+            document.getElementById('btn-save-json').addEventListener('click', () => {
+                const data = JSON.stringify(serializeSceneState(), null, 2);
+                downloadBlob(new Blob([data], { type: 'application/json' }), '3ds-project.json');
+                showToast('Proyek 3DS disimpan sebagai .JSON');
+            });
+            document.getElementById('btn-clear-scene').addEventListener('click', () => {
+                clearAllObjects(true);
+                modalMenu.classList.add('hidden');
+                showToast('Semua objek dibersihkan');
+            });
+
+            // Draw Modal
+            const modalDraw = document.getElementById('modal-draw');
+            document.getElementById('btn-open-draw').addEventListener('click', () => modalDraw.classList.remove('hidden'));
+            document.getElementById('btn-close-draw').addEventListener('click', () => modalDraw.classList.add('hidden'));
+
+            // Text Modal
+            const modalText = document.getElementById('modal-text');
+            document.getElementById('btn-open-text').addEventListener('click', () => modalText.classList.remove('hidden'));
+            document.getElementById('btn-close-text').addEventListener('click', () => modalText.classList.add('hidden'));
+            document.getElementById('btn-Generate-text').addEventListener('click', () => {
+                const txt = document.getElementById('inp-3d-text').value;
+                create3DTextObject(txt);
+                modalText.classList.add('hidden');
+            });
+
+            // Import File Trigger
+            const fileInput = document.getElementById('file-import-input');
+            document.getElementById('btn-import-trigger').addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileImport(e.target.files[0]);
+                    fileInput.value = '';
+                }
+            });
+
+            // 9. Keyboard Shortcuts (W, E, R, Delete, Ctrl+Z, Ctrl+D)
+            window.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT') return;
+
+                if (e.key.toLowerCase() === 'w') setTransformMode('translate');
+                else if (e.key.toLowerCase() === 'e') setTransformMode('scale');
+                else if (e.key.toLowerCase() === 'r') setTransformMode('rotate');
+                else if (e.key === 'Delete' || e.key === 'Backspace') deleteSelectedObject();
+                else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    restoreHistoryState(historyIndex - 1);
+                } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+                    e.preventDefault();
+                    restoreHistoryState(historyIndex + 1);
+                } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+                    e.preventDefault();
+                    cloneSelectedObject();
+                }
+            });
+        }
+
+        // ============================================================================
+        // UTILITAS & LOOP ANIMASI UTAMA
+        // ============================================================================
+        let toastTimeout;
+        function showToast(msg) {
+            const el = document.getElementById('toast-msg');
+            el.textContent = msg;
+            el.style.opacity = '1';
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                el.style.opacity = '0';
+            }, 2200);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            orbitControls.update();
+            if (selectedObject && selectionBoxHelper.visible) {
+                selectionBoxHelper.update();
+                if (showDimensions) updateDimensionLabels();
+            }
+            renderer.render(scene, camera);
+        }
+
+        // Jalankan aplikasi setelah halaman selesai dimuat
+        window.onload = function () {
+            initThreeScene();
+            setupUIEvents();
+            setupSketchDrawer();
+            animate();
+        };
+    </script>
+</body>
+</html>
